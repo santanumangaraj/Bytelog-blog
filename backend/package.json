@@ -1,0 +1,19 @@
+{
+  "name": "bytelog-backend",
+  "version": "1.0.0",
+  "description": "a full stack blog website",
+  "keywords": [
+    "node",
+    "bytelog"
+  ],
+  "license": "ISC",
+  "author": "Santanu Mangaraj",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

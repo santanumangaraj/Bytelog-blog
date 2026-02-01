@@ -4,7 +4,6 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { uploadOnCloudinary} from "../utils/cloudinary.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import jwt from "jsonwebtoken"
-import mongoose from "mongoose"
 
 const generateAccessAndRefreshTokens = async (userId)=>{
     try{
@@ -70,7 +69,7 @@ const registerUser = asyncHandler(async(req , res)=>{
     return res
     .status(201)
     .json(
-        new ApiResponse(200,createdUser,"User Registered Successfully!!")
+        new ApiResponse(201,createdUser,"User Registered Successfully!!")
     )
 })
 

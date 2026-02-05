@@ -170,10 +170,36 @@ const deleteABlog = asyncHandler(async (req, res)=>{
     )
 })
 
+const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
+    const {blogId} = req.params
+    const {status} = req.body
+
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+    
+    const blog = await Blog.findById(blogId)
+
+    if(!blog){
+        throw new ApiError(404,"Blog not found")
+    }
+
+    blog.status = status
+    blog.isPublished = status === "published" ? true:false;
+    await blog.save()
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,blog,"Video Published status update successfully")
+    )
+})
+
 export {
     publishABlog,
     getBlogById,
     getAllBlogs,
     updateBlogDetails,
-    deleteABlog
+    deleteABlog,
+    togglePublishBlogStatus
 } 

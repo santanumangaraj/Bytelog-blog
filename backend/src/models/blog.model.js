@@ -18,8 +18,8 @@ const blogSchema = new Schema({
     },
     image:String,
     status:{
-        type:[String],
-        enum:['draft', 'review', 'published'],
+        type:String,
+        enum:['draft', 'published'], 
         default:"draft"
     },
     isPublished:{

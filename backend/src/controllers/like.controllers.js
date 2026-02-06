@@ -44,5 +44,23 @@ const toggleBlogLike = asyncHandler(async (req, res)=>{
     )
 })
 
+const getBlogLikeCount = asyncHandler(async (req,res)=>{
 
-export {toggleBlogLike}
+    const {blogId} = req.params
+
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+
+    const likedCount = await Like.countDocuments({blog:blogId})
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{likedCount},"Blog likes fetched successfully")
+    )
+})
+export {
+    toggleBlogLike,
+    getBlogLikeCount
+}

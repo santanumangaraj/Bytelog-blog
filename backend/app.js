@@ -23,10 +23,11 @@ app.use(cookieParser())
 import userRouter from "./src/routes/user.routes.js"
 import blogRouter from "./src/routes/blog.routes.js"
 import likeRouter from "./src/routes/like.routes.js"
+import { errorHandler } from "./src/middlewares/error.middleware.js";
 
 app.use("/api/v2/users",userRouter)
 app.use("/api/v2/blogs",blogRouter)
 app.use("/api/v2/likes",likeRouter)
 
-
+app.use(errorHandler)
 export {app}

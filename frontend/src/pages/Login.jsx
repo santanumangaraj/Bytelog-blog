@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../routes/api.js";
+import { useAuth } from "../component/AuthContext.jsx";
 
 const Login=()=>{
+    const { login } = useAuth();
     const [err,setErr] = useState("")
     const [loading,setLoading] = useState(false)
     const [form,setForm] = useState({
@@ -25,7 +27,7 @@ const Login=()=>{
 
         try{
             const res = await loginUser(form)
-            localStorage.setItem("token",res.data.data.accessToken)
+            login(res.data)
             navigate("/")
         }catch(err){
             setErr(err.response?.data?.message || "Login failed")
@@ -40,7 +42,7 @@ const Login=()=>{
                 <img src="/ByteLog.svg" className="h-16 sm:h-20 md:h-24 mx-auto" alt="bytelog"/>
                 <h3 className="text-2xl sm:text-3xl font-semibold">Sign in</h3>
                 <p className="text-sm sm:text-base">or <a onClick={()=>navigate("/register")} className="text-cyan-500 cursor-pointer hover:underline">Create an account</a></p>
-            </div>npm 
+            </div>
             <form className="w-full max-w-sm sm:max-w-md flex flex-col gap-3 py-4 px-4" onSubmit={handleSubmit}>
                 {err && 
                 <p className=" border-2 border-red-300 p-3 bg-red-100 text-sm rounded">

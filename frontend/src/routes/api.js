@@ -19,4 +19,10 @@ API.interceptors.request.use((req)=>{
 export const loginUser = (data)=> API.post("/users/login",data);
 export const registerUser = (data)=> API.post("/users/register",data);
 
+//blog route
+export const getAllBlogs = (params)=> API.get("/blogs/",params);
+
+//likes route
+export const getBlogLikeCount = (params) => API.get(`/likes/count/${params}`);
+
 export default API

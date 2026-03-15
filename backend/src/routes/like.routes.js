@@ -5,9 +5,9 @@ import { toggleBlogLike,getBlogLikeCount } from "../controllers/like.controllers
 
 const router = Router()
 
-router.use(verifyJWT)
+// router.use(verifyJWT)
 
-router.route("/toggle/bl/:blogId").post(toggleBlogLike)
+router.route("/toggle/bl/:blogId").post(verifyJWT,toggleBlogLike)
 router.route("/count/:blogId").get(getBlogLikeCount)
 
 

@@ -92,6 +92,7 @@ const getAllBlogs = asyncHandler(async (req, res)=>{
     }
 
     const blogs = await Blog.find(filter)
+    .populate("author", "fullName")
     .sort(sortOptions)
     .skip(skip)
     .limit(limitNum)

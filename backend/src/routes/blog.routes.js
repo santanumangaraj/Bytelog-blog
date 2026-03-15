@@ -6,13 +6,13 @@ import { deleteABlog, getAllBlogs, getBlogById, publishABlog, togglePublishBlogS
 
 const router = Router()
 
-router.use(verifyJWT)
+// router.use(verifyJWT)
 
-router.route("/upload-blog").post(upload.single("image"),publishABlog)
+router.route("/upload-blog").post(upload.single("image"),verifyJWT,publishABlog)
 router.route("/b/:blogId").get(getBlogById)
 router.route("/").get(getAllBlogs)
-router.route("/update-blog-details/:blogId").patch(updateBlogDetails)
-router.route("/delete-blog/:blogId").delete(deleteABlog)
-router.route("/toggle/publish/:blogId").patch(togglePublishBlogStatus)
+router.route("/update-blog-details/:blogId").patch(verifyJWT,updateBlogDetails)
+router.route("/delete-blog/:blogId").delete(verifyJWT,deleteABlog)
+router.route("/toggle/publish/:blogId").patch(verifyJWT,togglePublishBlogStatus)
 
 export default router

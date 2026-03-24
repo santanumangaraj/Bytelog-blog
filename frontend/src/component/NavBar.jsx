@@ -64,38 +64,40 @@ const NavBar = ()=>{
     
     return(
         <div className="flex sticky top-0 z-50 justify-between items-center border-b shadow-md bg-base-100 ">
-            <picture className=" ml-10 lg:ml-52 hidden lg:flex">
-                <img src="/ByteLog.svg" className="h-12" alt="ByteLog logo" />
-            </picture>
-            <div className="hidden lg:flex justify-between gap-x-5 lg:pl-10 lg:mr-52 w-full">
-                <ul className=" flex justify-center items-center gap-x-7 text-lg font-semibold">
-                    {
-                        [
-                            { to:"/", label: "Home"},
-                            { to:"/blogs", label: "Blogs"},
-                            { to:"/about", label: "About me"},
-                            { to:"/contact", label: "Contact"},
-                        ].map(({to,label})=>(
-                            <li key={to}>
-                                <NavLink to={to} className={({ isActive})=> `group relative pb-2 transition-all duration-300 ${isActive? "text-[#FF2DAA]":"text-primary hover:text-[#FF2DAA]"}`}>
-                                    {({isActive})=>(
-                                    <>
-                                        {label}
-                                        <span className={`absolute left-0 bottom-0 h-[2px] bg-[#FF2DAA] w-full transform origin-left transition-transform duration-300 ${isActive? "scale-x-100":"scale-x-0 group-hover:scale-x-100"} `}></span>
-                                    </>)}
-                                </NavLink>
-                            </li>
-                        ))
-                    }
-                </ul>
-                <ul className="flex justify-center items-center gap-x-2 py-2 text-xl  font-semibold">
+            <div className="hidden lg:flex justify-between gap-x-5 lg:mx-32  xl:mx-44 w-full">
+                <div className="flex gap-5">
+                    <picture className="flex justify-center items-center">
+                        <img src="/ByteLog.svg" className="h-12" alt="ByteLog logo" />
+                    </picture>
+                    <ul className=" flex justify-center items-center gap-x-5 text-sm xl:text-lg font-semibold">
+                        {
+                            [
+                                { to:"/", label: "Home"},
+                                { to:"/blogs", label: "Blogs"},
+                                { to:"/about", label: "About"},
+                                { to:"/contact", label: "Contact"},
+                            ].map(({to,label})=>(
+                                <li key={to}>
+                                    <NavLink to={to} className={({ isActive})=> `group relative pb-2 transition-all duration-300 ${isActive? "text-[#FF2DAA]":"text-primary hover:text-[#FF2DAA]"}`}>
+                                        {({isActive})=>(
+                                        <>
+                                            {label}
+                                            <span className={`absolute left-0 bottom-0 h-[2px] bg-[#FF2DAA] w-full transform origin-left transition-transform duration-300 ${isActive? "scale-x-100":"scale-x-0 group-hover:scale-x-100"} `}></span>
+                                        </>)}
+                                    </NavLink>
+                                </li>
+                            ))
+                        }
+                    </ul>
+                </div>
+                <ul className="flex justify-center items-center gap-x-2 py-2 xl:text-xl font-semibold ">
                     <li className=" border-r-2 pr-2">
                         <div className="relative ">
                             <FontAwesomeIcon icon={faMagnifyingGlass} className="text-lg absolute left-3 top-1/2 -translate-y-1/2"/>
                             <input type="search" placeholder="Search..." className="w-full pl-10 pr-2 py-2 rounded-full border bg-base-100 focus:outline-none focus:ring-1 focus:ring-[#FF2DAA] focus:border-[#FF2DAA] transition-all duration-200" />
                         </div>
                     </li>
-                    {!user ?<li className="border-2 rounded-md px-2 py-1.5 text-center bg-[#f844b0] text-base-100 hover:bg-[#da2090]"><NavLink to={"/login"}>Log in</NavLink></li>:
+                    {!user ?<li className="border-2 rounded-md px-2 py-1.5 text-center bg-[#f844b0] text-base-100 hover:bg-[#da2090]"><NavLink to={"/login"}>Login</NavLink></li>:
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
                             <div className="w-10 rounded-full">
@@ -182,7 +184,7 @@ const NavBar = ()=>{
                                 <div className="flex justify-start items-center gap-3 mx-5">
                                     <div className="avatar">
                                         <div className="ring-primary ring-offset-base-100 h-10 rounded-full ring ring-offset-2">
-                                            <img src={user.avatar} className=""/>
+                                            <img src={user.avatar}/>
                                         </div>
                                     </div>
 

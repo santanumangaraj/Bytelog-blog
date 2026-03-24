@@ -115,10 +115,24 @@ const Home=()=>{
     }
 
     return(
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mx-7 lg:mx-52 my-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
             {!blogs?.blogs?.length ? blogSkeleton() :
             (<>
-            <div className=" card card-compact bg-base-100 shadow-xl  border-base-300 lg:col-span-2">
+            <div className=" card card-compact bg-base-100 shadow-xl  border-base-300 md:col-span-2">
+                <div className="fab relative">
+                    <div tabIndex={0} role="button" className="btn btn-primary shadow-xl absolute -right-5 -translate-y-12 lg:-right-96 lg:-translate-y-11 ">
+                    <svg
+                    aria-label="New"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    className="size-6"
+                    >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>New Blog</div>
+                </div>
                 <img src={featuredBlog?.image} className="w-full h-52 sm:h-80 object-cover rounded-md" alt="blog image"/>
                 <div className="card-body">
                     <p className="card-title text-xl sm:text-4xl lg:text-5xl font-barlow font-medium hover:underline hover:cursor-pointer">{featuredBlog?.title} </p>
@@ -132,7 +146,7 @@ const Home=()=>{
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full md:col-span-2 lg:col-span-1">
                 <h2 className="text-xl font-semibold  border-b-2 border-[#FF2DAA]">Featured Posts</h2>
                 <ul className="flex flex-col gap-3 mt-5">
                 {blogs.blogs.slice(1,6).map((blog,_)=>(
@@ -146,10 +160,8 @@ const Home=()=>{
                 ))}
                 </ul>
             </div>
-            </>)}
-            <div className="grid col-span-4 gap-2 grid-cols-4">
-                {blogs.blogs.slice(2,6).map((blog,_)=>(
-                <div className="card card-compact bg-base-100 w-full shadow-xl">
+                {blogs.blogs.slice(2,5).map((blog,_)=>(
+                <div key={blog._id} className="card card-compact bg-base-100 shadow-xl">
                     <figure className="px-5 pt-5">
                         <img
                         src={blog.image}
@@ -167,8 +179,9 @@ const Home=()=>{
                     </div>
                 </div>
                 ))}
-            </div>
 
+            
+            </>)}
         </div>
     )
 }

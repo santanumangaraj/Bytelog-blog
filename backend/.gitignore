@@ -118,5 +118,5 @@ dist
 .pnp.*
 
 
-./src/config/config.json
+src/config/config.json
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node

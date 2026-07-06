@@ -1,0 +1,39 @@
+{
+  "name": "bytelog-backend",
+  "version": "1.0.0",
+  "description": "a full stack blog website",
+  "keywords": [
+    "node",
+    "bytelog"
+  ],
+  "license": "ISC",
+  "author": "Santanu Mangaraj",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "swagger": "node ./Swagger.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1078.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "mysql2": "^3.22.5",
+    "redis": "^6.1.0",
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "prettier": "^3.8.1",
+    "sequelize-cli": "^6.6.5",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1"
+  }
+}

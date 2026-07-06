@@ -1,4 +1,4 @@
-import { loginUser, registerUser } from "../services/auth.service.js"
+import { changeUserPassword, loginUser, registerUser } from "../services/auth.service.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -47,7 +47,41 @@ const login = asyncHandler(async(req,res)=>{
         )
     )
 })
+
+const logoutUser = asyncHandler(async (req ,res)=>{
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(
+            200,
+            {},
+            "User logged out"
+        )
+    )
+})
+
+const changePassword = asyncHandler(async(req,res)=>{
+
+    const user = await changeUserPassword(req.body,req.user?.id)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{},"Password changed successfully")
+    )
+})
+
 export {
     register,
-    login
+    login,
+    logoutUser,
+    changePassword
 }

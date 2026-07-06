@@ -33,15 +33,19 @@ const findUserByPk = async(userId)=>{
         attributes: ["id","username", "fullName", "email","avatar"]
     })
 }
+const findByPkWithAllFields = async(userId)=>{
+
+    return await User.findByPk(userId)
+}
 
 const updateUser = async(user,data)=>{
     return await user.update(data)
 }
 
-
 export {
     createUser,
     findByIdentifier,
+    findByPkWithAllFields,
     findByEmailOrUsername,
     findUserByPk,
     updateUser

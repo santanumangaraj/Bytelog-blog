@@ -21,8 +21,8 @@ router.post("/register",
 router.post("/login",doValidate(loginSchema),login)
 router.post("/logout",verifyJWT,logoutUser)
 router.post("/change-password",verifyJWT,doValidate(changePasswordSchema),changePassword)
+router.route("/current-user").get(verifyJWT,getCurrentUser)
 // router.route("/refresh-token").post(refreshAccessToken)
-// router.route("/current-user").get(verifyJWT,getCurrentUser)
 // router.route("/update-account").patch(verifyJWT,updateAccountDetails)
 // router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar)
 

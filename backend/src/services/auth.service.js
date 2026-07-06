@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import bcrypt from "bcrypt"
-import { createUser, findByEmailOrUsername, findByIdentifier, findUserByPk, updateUser } from "../repository/auth.repository.js";
+import { createUser, findByEmailOrUsername, findByIdentifier, findByPkWithAllFields, findUserByPk, updateUser } from "../repository/auth.repository.js";
 import generateAccessAndRefreshTokens from "../utils/generateAccessAndRefreshTokens.js"
 
 const registerUser = async (data) => {
@@ -40,7 +40,7 @@ const registerUser = async (data) => {
 
 const loginUser = async({identifier,password})=>{
 
-    if(!(identifier || password)){
+    if(!identifier || !password){
         throw new ApiError(400,"Either Username or email is required")
     }
 
@@ -66,8 +66,25 @@ const loginUser = async({identifier,password})=>{
     return {loggedInUser,accessToken,refreshToken};
 }
 
+const changeUserPassword = async({oldPassword, newPassword},userId)=>{
+
+    const user = await findByPkWithAllFields(userId)
+
+    const isPasswordCorrect = await bcrypt.compare(oldPassword,user.password)
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400,"Invalid old password")
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword,10)
+
+    await updateUser(user,{password:hashedNewPassword})
+
+    return user;
+}
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    changeUserPassword
 }

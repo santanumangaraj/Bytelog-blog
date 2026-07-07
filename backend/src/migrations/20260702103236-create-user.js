@@ -33,7 +33,6 @@ module.exports = {
       },
       refreshToken: {
         type: Sequelize.STRING,
-        allowNull:false,
       },
       createdAt: {
         allowNull: false,

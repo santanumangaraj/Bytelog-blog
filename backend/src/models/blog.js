@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   blog.init({
     title: {
-      type:DataTypes.STRING,
+      type:DataTypes.STRING(200),
       allowNull:false,
       unique:{msg:"title must be unique"},
       validate:{
@@ -23,47 +23,51 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty:{msg:"title can't be empty"}
       }
     },
+    slug:{
+      type:DataTypes.STRING(220),
+      allowNull:false,
+      unique:{msg:"slug must be unique"},
+      validate:{
+        notNull:{msg:"slug is required"},
+        notEmpty:{msg:"slug can't be empty"}
+      }
+    },
+    excerpt:{
+      type:DataTypes.STRING(300),
+      allowNull:false,
+      validate:{
+        notNull:{msg:"excerpt is required"},
+        notEmpty:{msg:"excerpt can't be empty"}
+      }
+    },
     content:{
-      type:DataTypes.STRING,
+      type:DataTypes.TEXT('long'),
       allowNull:false,
       validate:{
         notNull:{msg:"content is required"},
         notEmpty:{msg:"content can't be empty"}
       }
     },
-    image: {
-      type:DataTypes.STRING,
-      allowNull:false,
-      validate:{
-        notNull:{msg:"image is required"},
-        notEmpty:{msg:"image can't be empty"}
-      }
+    coverImageUrl: {
+      type:DataTypes.STRING(500),
+    },
+    coverImageKey: {
+      type:DataTypes.STRING(500),
     },
     status: {
-      type:DataTypes.JSON,
-      allowNull:false,
-      defaultValue:[],
-      validate:{
-        notNull:{msg:"status is required"},
-        notEmpty:{msg:"status can't be empty"}
-      }
+      type:DataTypes.ENUM("draft", "published", "archived"),
+      defaultValue:"draft",
     },
-    isPublished:{
-      type:DataTypes.BOOLEAN,
-      allowNull:false,
-      defaultValue:false,
-      validate:{
-        notNull:{msg:"isPublished is required"},
-        notEmpty:{msg:"isPublished can't be empty"}
-      }
+    views: {
+      type:DataTypes.INTEGER.UNSIGNED,
+      defaultValue:0,
+    },
+    publishedAt:{
+      type:DataTypes.DATE,
     },
     author:{
       type:DataTypes.INTEGER,
       allowNull:false,
-      validate:{
-        notNull:{msg:"author is required"},
-        notEmpty:{msg:"author can't be empty"}
-      }
     }
   }, {
     sequelize,

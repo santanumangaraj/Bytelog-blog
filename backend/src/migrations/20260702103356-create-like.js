@@ -12,18 +12,24 @@ module.exports = {
       blogId: {
         type: Sequelize.INTEGER,
         allowNull:false,
+        unique: true,
         references:{
           model:"blogs",
           key:"id"
-        }
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE"
       },
       likedBy: {
         type: Sequelize.INTEGER,
         allowNull:false,
+        unique: true,
         references:{
           model:"users",
           key:"id"
-        }
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE"
       },
       createdAt: {
         allowNull: false,

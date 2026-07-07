@@ -10,28 +10,36 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       title: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(200),
         allowNull:false,
         unique:true
+      },
+      slug: {
+        type: Sequelize.STRING(220),
+        allowNull:false,
+        unique:true
+      },
+      excerpt: {
+        type: Sequelize.STRING(300),
+        allowNull:false,
       },
       content: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT('long'),
         allowNull:false,
       },
-      image: {
-        type: Sequelize.STRING,
-        allowNull:false,
-        unique:true
+      coverImageUrl: {
+        type: Sequelize.STRING(500),
+      },
+      coverImageKey: {
+        type: Sequelize.STRING(500),
       },
       status: {
-        type: Sequelize.JSON,
-        allowNull:false,
-        defaultValue:[]
+        type: Sequelize.ENUM("draft", "published", "archived"),
+        defaultValue: "draft",
       },
-      isPublished: {
-        type: Sequelize.BOOLEAN,
-        allowNull:false,
-        defaultValue:false
+      views:{
+        type: Sequelize.INTEGER.UNSIGNED,
+        defaultValue:0
       },
       author: {
         type: Sequelize.INTEGER,
@@ -42,6 +50,9 @@ module.exports = {
         },
         onDelete: "CASCADE",
         onUpdate: "CASCADE"
+      },
+      publishedAt: {
+        type: Sequelize.DATE,
       },
       createdAt: {
         allowNull: false,

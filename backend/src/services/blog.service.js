@@ -28,8 +28,6 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
             blogId:blog.id,
             filePath: image[0].path,
             fileName: image[0].originalname,
-            mimetype:image[0].mimetype,
-            status:status
         },
         {
             attempts: 5,

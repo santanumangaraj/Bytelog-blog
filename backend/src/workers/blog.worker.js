@@ -10,7 +10,7 @@ const blogImageWorker = new Worker("blog-image-processing",async(job)=>{
     console.log("Worker received job");
     console.log(job.data);
 
-    const { blogId,filePath,mimetype,fileName,status} = job.data
+    const { blogId,filePath,mimetype,fileName} = job.data
     
     try {
         const s3Key = `uploads/blogImage/${Date.now()}-${fileName}`;
@@ -33,10 +33,8 @@ const blogImageWorker = new Worker("blog-image-processing",async(job)=>{
         const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
     
         const getBlog = await findBlogByPk(blogId);
-    
-        const publishedAt = status === "published"? new Date():null;
-    
-        await updateBlog(getBlog,{coverImageUrl:fileUrl,coverImageKey:s3Key,status,publishedAt})
+        
+        await updateBlog(getBlog,{coverImageUrl:fileUrl,coverImageKey:s3Key,status:"published",publishedAt:new Date()})
     
         fs.unlinkSync(filePath);
         fs.unlinkSync(newOptimizeImgPath)

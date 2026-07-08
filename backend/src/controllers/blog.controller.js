@@ -15,7 +15,7 @@ const publish = asyncHandler(async(req , res)=>{
     }
 
     return res
-    .status(200)
+    .status(202)
     .json(
         new ApiResponse(202,
             newBlog,

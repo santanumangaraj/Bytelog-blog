@@ -1,5 +1,6 @@
 import "dotenv/config"
 import { Worker } from "bullmq";
+import redis from "../config/redis.js";
 import { PutObjectCommand} from "@aws-sdk/client-s3";
 import s3 from "../config/s3.js"
 import fs from "fs"
@@ -45,10 +46,8 @@ const blogImageWorker = new Worker("blog-image-processing",async(job)=>{
         );
     }
 },{
-    connection: {
-        host: "127.0.0.1",
-        port: 6379,
-}})
+    connection: redis
+})
 
 blogImageWorker.on("completed", (job) => {
     console.log(`Job ${job.id} completed`);

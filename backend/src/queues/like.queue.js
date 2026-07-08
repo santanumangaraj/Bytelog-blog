@@ -1,11 +1,11 @@
 import { Queue } from "bullmq";
 import redis from "../config/redis.js";
 
-const blogImageUploadQueue = new Queue("blog-image-processing",{
+const toggleLikeQueue = new Queue("toggle-like-processing",{
     connection: redis
 })
 
 
 export {
-    blogImageUploadQueue
+    toggleLikeQueue
 }

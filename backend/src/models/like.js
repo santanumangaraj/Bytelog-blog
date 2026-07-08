@@ -11,13 +11,17 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      like.belongsToMany(models.blog,{
+        through: "blogLikes",
+        as:"likedBlogs",
+        foreignKey:"LikeId"
+      })
     }
   }
   like.init({
     blogId: {
       type:DataTypes.INTEGER,
       allowNull:false,
-      unique:{msg:"blogId must be unique"},
       validate:{
         notNull:{msg:"blogId is required"},
         notEmpty:{msg:"blogId can't be empty"}
@@ -26,8 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     likedBy: {
       type:DataTypes.INTEGER,
       allowNull:false,
-      unique:{msg:"likedBy must be unique"},
-      validate:{
+      validate:{        
         notNull:{msg:"likedBy is required"},
         notEmpty:{msg:"likedBy can't be empty"}
       }
@@ -35,6 +38,12 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'like',
+    indexes: [
+      {
+          unique: true,
+          fields: ["blogId", "likedBy"]
+      }
+    ]
   });
   return like;
 };

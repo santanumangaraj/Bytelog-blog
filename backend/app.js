@@ -4,7 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser"
 import swaggerUi from "swagger-ui-express"
 import swaggerDocument from "./swagger-output.json" with { type: "json" };
-import { connectRedis } from "./src/config/redis.js";
+import redis from "./src/config/redis.js";
 const app = express()
 
 app.use(cors({
@@ -19,18 +19,17 @@ app.use(express.json({
 app.use(express.urlencoded({extended: true,limit: "16kb"}))//for parsing application/x-www-form-urlencoded or url encoded or form-data
 app.use(express.static("public"))
 app.use(cookieParser())
-connectRedis();
 
 //routes import 
 
 import userRouter from "./src/routes/auth.route.js"
 import blogRouter from "./src/routes/blog.route.js"
-// import likeRouter from "./src/routes/like.routes.js"
+import likeRouter from "./src/routes/like.route.js"
 import { errorHandler } from "./src/middlewares/error.middleware.js";
 
 app.use("/api/v2/users",userRouter)
 app.use("/api/v2/blogs",blogRouter)
-// app.use("/api/v2/likes",likeRouter)
+app.use("/api/v2/likes",likeRouter)
 app.use("/api-docs",swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 

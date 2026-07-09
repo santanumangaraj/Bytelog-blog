@@ -19,9 +19,14 @@ const findBlogByPk = async(blogId)=>{
 const updateBlog = async(blog,data)=>{
     return await blog.update(data)
 }
+
+const findAndCountAllBlogs = async(data)=>{
+    return await Blog.findAndCountAll(data)
+}
 export {
     findOneBlog,
     findBlogByPk,
     updateBlog,
-    createBlog
+    createBlog,
+    findAndCountAllBlogs
 }

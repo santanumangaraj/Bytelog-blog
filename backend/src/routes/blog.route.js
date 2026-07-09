@@ -1,7 +1,7 @@
 import {Router} from "express"
 import {uploadBlogImage} from "../middlewares/multer.middleware.js";
 import { verifyJWT} from "../middlewares/auth.middleware.js"
-import { publish } from "../controllers/blog.controller.js";
+import { fetchedAllBlogs, getBlog, publish } from "../controllers/blog.controller.js";
 
 
 const router = Router()
@@ -14,8 +14,9 @@ router.post("/upload-blog",uploadBlogImage.fields([
             maxCount: 1
         }
     ]),verifyJWT,publish)
-// router.route("/b/:blogId").get(getBlogById)
-// router.route("/").get(getAllBlogs)
+    
+router.get("/id/:blogId",getBlog)
+router.route("/").get(fetchedAllBlogs)
 // router.route("/update-blog-details/:blogId").patch(verifyJWT,updateBlogDetails)
 // router.route("/delete-blog/:blogId").delete(verifyJWT,deleteABlog)
 // router.route("/toggle/publish/:blogId").patch(verifyJWT,togglePublishBlogStatus)

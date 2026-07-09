@@ -6,70 +6,49 @@ import { decrementLikeCount, incrementLikeCount } from "../services/redisLike.se
 import { ApiError } from "../utils/ApiError.js";
 import { findBlogByPk } from "../repository/blog.repository.js";
 
-const toggleLikeWorker = new Worker(
-    "toggle-like-processing",
-    async (job) => {
-
+const toggleLikeWorker = new Worker("toggle-like-processing",async (job) => {
         console.log(`Processing ${job.name} job`);
 
         const { blogId, likedBy } = job.data;
 
         try {
-
             switch (job.name) {
-
                 case "toggle-like-process":
-
                     try {
-
                         await createBlogLike({
                             blogId,
                             likedBy
                         });
-
                         await incrementLikeCount(blogId);
-
                         return {
                             action: "LIKED"
                         };
-
                     } catch (error) {
-
                         if (error.name === "SequelizeUniqueConstraintError") {
-
                             return {
                                 action: "ALREADY_LIKED"
                             };
                         }
-
                         throw error;
                     }
 
                 case "toggle-unlike-process":
-
                     const deletedRows = await destoryBlogLike({
                         blogId,
                         likedBy
                     });
-
                     if (deletedRows > 0) {
-
                         await decrementLikeCount(blogId);
-
                         return {
                             action: "UNLIKED"
                         };
                     }
-
                     return {
                         action: "ALREADY_UNLIKED"
                     };
-
                 default:
-
                     throw new Error(`Unknown job type: ${job.name}`);
             }
-
         } catch (error) {
 
             console.log(

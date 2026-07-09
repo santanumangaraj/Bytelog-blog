@@ -1,7 +1,10 @@
 import {Router} from "express"
 import {uploadBlogImage} from "../middlewares/multer.middleware.js";
 import { verifyJWT} from "../middlewares/auth.middleware.js"
-import { fetchedAllBlogs, getBlog, publish } from "../controllers/blog.controller.js";
+import { delBlog, fetchedAllBlogs, getBlog, publish } from "../controllers/blog.controller.js";
+import { doValidate } from "../middlewares/validate.middleware.js";
+import { deleteBlogSchema, getAllBlogsSchema, getBlogByIdSchema, publishSchema } from "../validations/blog.validation.js";
+import idempotencyMiddleware from "../middlewares/idempotency.middleware.js";
 
 
 const router = Router()
@@ -13,12 +16,12 @@ router.post("/upload-blog",uploadBlogImage.fields([
             name: "image",
             maxCount: 1
         }
-    ]),verifyJWT,publish)
+    ]),verifyJWT,doValidate(publishSchema),idempotencyMiddleware,publish)
     
-router.get("/id/:blogId",getBlog)
-router.route("/").get(fetchedAllBlogs)
+router.get("/id/:blogId",doValidate(getBlogByIdSchema,"params"),getBlog)
+router.route("/").get(doValidate(getAllBlogsSchema),fetchedAllBlogs)
+router.route("/delete-blog/:blogId").delete(verifyJWT,doValidate(deleteBlogSchema,"params"),delBlog)
 // router.route("/update-blog-details/:blogId").patch(verifyJWT,updateBlogDetails)
-// router.route("/delete-blog/:blogId").delete(verifyJWT,deleteABlog)
 // router.route("/toggle/publish/:blogId").patch(verifyJWT,togglePublishBlogStatus)
 
 export default router

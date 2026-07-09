@@ -1,17 +1,20 @@
 import { Op } from "sequelize"
-import { blogImageUploadQueue } from "../queues/blog.queue.js"
-import { createBlog, findAndCountAllBlogs, findBlogByPk, findOneBlog } from "../repository/blog.repository.js"
+import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
+import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog } from "../repository/blog.repository.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { generateExcerpt } from "../utils/excerpt.utils.js"
 import createUniqueSlug from "../utils/slug.utils.js"
-import { createCacheData, getCacheData } from "./redisBlog.service.js"
+import { createCacheData, deleteCache, getCacheData } from "./redisCache.js"
+import { acquireLock } from "../cache/redisLock.js"
+import { cacheAside } from "../cache/cacheAside.js"
+import {  cacheKey } from "../cache/cacheKey.js"
 
 
 
 const publishBlog = async(userId,{title,content,status},{image})=>{
 
-        if(!title || status || !content){
+        if(!title || !content){
             throw new ApiError(400,"All fields are required")
         }
 
@@ -25,6 +28,12 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
             excerpt,
             author:userId
         })
+
+        const lockKey = cacheKey.blogImageLock(blog.id)
+
+        if(!lockKey){
+            throw new ApiError(409,'Image processing is already in progress.')
+        }
         
         await blogImageUploadQueue.add("blog-image-process",{
             blogId:blog.id,
@@ -33,6 +42,7 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
         },
         {
             attempts: 5,
+            jobId:`blog-image-${blog.id}`,
             backoff: {
                 type: "exponential",
                 delay: 5000
@@ -61,74 +71,120 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
     const limitNum = Number(limit)
     const offset = (pageNum-1) * limitNum;
 
-    const cacheKey = `cache:blogs:${page}:${limit}:${query || ""}:${sortBy || ""}:${sortType || ""}:${author || ""}`;
+    const filters = {page,limit, query,sortBy,sortType,author}
 
-    const cachedData = await getCacheData(cacheKey)
-
-    if(cachedData){
-        console.log("Blogs fetched from cache!!")
-        return cachedData
-    }
-
-    const where = {};
-
-    if(query){
-        where[Op.or] = [
-            {
-                title:{
-                    [Op.like]: `%${query}%`
-                },
-            },
-            {
-                slug:{
-                    [Op.like]: `%${query}%`
-                },
-            },
-        ]
-    }
-
-    if(author){
-        where.author = author
-    }
-
-    const allowedSortFields = ["createdAt", "title","views","publishedAt"];
-    const order = [];
-
-    if (allowedSortFields.includes(sortBy)) {
-        order.push([
-            sortBy,
-            sortType.toLowerCase() === "asc" ? "asc" : "desc",
-        ]);
-    } else {
-        order.push(["createdAt", "DESC"]);
-    }
-
-    const {rows,count } = await findAndCountAllBlogs({
-        where,
-        order,
-        offset,
-        limit: limitNum,
-    });
-
-
-    const AllBlogsdata = { 
-            rows,
-            pagination: {
-                totalBlogs: count,
-                currentPage: pageNum,
-                totalPages: Math.ceil(count / limitNum),
-                limit: limitNum,
+    return await cacheAside({
+        key: cacheKey.getAllBlogs(filters),
+        ttl: 60,
+        loader: async ()=>{
+            const where = {};
+        
+            if(query){
+                where[Op.or] = [
+                    {
+                        title:{
+                            [Op.like]: `%${query}%`
+                        },
+                    },
+                    {
+                        slug:{
+                            [Op.like]: `%${query}%`
+                        },
+                    },
+                ]
             }
-        }
+        
+            if(author){
+                where.author = author
+            }
+        
+            const allowedSortFields = ["createdAt", "title","views","publishedAt"];
+            const order = [];
+        
+            if (allowedSortFields.includes(sortBy)) {
+                order.push([
+                    sortBy,
+                    sortType.toLowerCase() === "asc" ? "asc" : "desc",
+                ]);
+            } else {
+                order.push(["createdAt", "DESC"]);
+            }
+        
+            const {rows,count } = await findAndCountAllBlogs({
+                where,
+                order,
+                offset,
+                limit: limitNum,
+            });
+        
+        
+            const AllBlogsdata = { 
+                    rows,
+                    pagination: {
+                        totalBlogs: count,
+                        currentPage: pageNum,
+                        totalPages: Math.ceil(count / limitNum),
+                        limit: limitNum,
+                    }
+                }
 
-
-    const setCacheData = await createCacheData(cacheKey,AllBlogsdata,60)
-
-    console.log("Blogs fetched from Db!!")
-
-    return AllBlogsdata
+                return AllBlogsdata
+        }    
+    })    
 
 }
+
+const deleteABlog = async ({blogId},userId)=>{
+
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+
+    const getBlog = await findBlogByPk(blogId)
+
+    if(!getBlog){
+        throw new ApiError(404,"Blog not found!!")
+    }
+
+    if(getBlog.author !== userId){
+        throw new ApiError(401,"Unauthorized to delete this blog")
+    }
+
+    await deleteBlogs(getBlog);
+
+    await deleteCache("cache:blogs:*")
+
+    await delBlogImgQueue.add("del-blog-img-process",{
+            coverImageKey:getBlog.coverImageKey
+        },
+        {
+            attempts: 5,
+            backoff: {
+                type: "exponential",
+                delay: 5000
+            },
+            removeOnComplete: true,
+            removeOnFail: false
+        })
+
+    
+
+    if(!getBlog){
+        throw new ApiError(500,"Something went wrong while deleting the blog!!")
+    }
+
+    return getBlog
+}
+
+
+
+
+
+
+
+
+
+
 
 /*
 const updateBlogDetails = asyncHandler(async (req, res) => {
@@ -169,26 +225,6 @@ const updateBlogDetails = asyncHandler(async (req, res) => {
     )
 })
 
-const deleteABlog = asyncHandler(async (req, res)=>{
-    const {blogId} = req.params
-
-    if(!blogId){
-        throw new ApiError(400,"Blog id is required")
-    }
-
-    const deletedBlog = await Blog.findByIdAndDelete(blogId,)
-
-    if(!deletedBlog){
-        throw new ApiError(500,"Something went wrong while deleting the blog!!")
-    }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,deleteABlog,"Blog deleted successfully")
-    )
-})
-
 const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
     const {blogId} = req.params
     const {status} = req.body
@@ -218,5 +254,6 @@ const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
 export {
     publishBlog,
     getBlogById,
-    getAllBlogs
+    getAllBlogs,
+    deleteABlog
 }

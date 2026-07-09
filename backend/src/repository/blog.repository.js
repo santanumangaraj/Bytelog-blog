@@ -20,6 +20,10 @@ const updateBlog = async(blog,data)=>{
     return await blog.update(data)
 }
 
+const deleteBlogs = async(blogDb)=>{
+    return await blogDb.destroy();
+}
+
 const findAndCountAllBlogs = async(data)=>{
     return await Blog.findAndCountAll(data)
 }
@@ -28,5 +32,6 @@ export {
     findBlogByPk,
     updateBlog,
     createBlog,
-    findAndCountAllBlogs
+    findAndCountAllBlogs,
+    deleteBlogs
 }

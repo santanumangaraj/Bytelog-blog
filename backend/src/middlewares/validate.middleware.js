@@ -1,9 +1,12 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const doValidate = (schema)=>{
+const doValidate = (schema,property="body")=>{
     return (req,res,next)=>{
         
-        const {error} = schema.validate(req.body);
+        const { error, value } = schema.validate(req[property], {
+            abortEarly: true,
+            stripUnknown: true,
+        });
 
         if(error){
 
@@ -12,6 +15,8 @@ const doValidate = (schema)=>{
                 message: error.details[0].message
             });
         }
+
+        req[property] = value;
 
         next();
     }

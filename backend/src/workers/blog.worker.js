@@ -1,25 +1,32 @@
-import "dotenv/config"
-import { Worker } from "bullmq";
-import redis from "../config/redis.js";
-import { PutObjectCommand} from "@aws-sdk/client-s3";
-import s3 from "../config/s3.js"
+import dotenv from "dotenv";
+import path from "path"
+dotenv.config({
+    path: path.resolve(process.cwd(),"../.env"),
+});
 import fs from "fs"
+import s3 from "../config/s3.js"
+import redis from "../config/redis.js";
+import { Worker } from "bullmq";
+import { DeleteObjectCommand, PutObjectCommand} from "@aws-sdk/client-s3";
 import { findBlogByPk, findOneBlog, updateBlog } from "../repository/blog.repository.js";
 import { optimizeImage } from "../utils/optimizeImage.utils.js";
+import { cacheKey } from "../cache/cacheKey.js";
 
 const blogImageWorker = new Worker("blog-image-processing",async(job)=>{
     console.log("Worker received job");
-    console.log(job.data);
 
-    const { blogId,filePath,mimetype,fileName} = job.data
+    const { blogId,filePath,fileName} = job.data
     
+    const lockKey = cacheKey.blogImageLock(blogId);
     try {
-        const s3Key = `uploads/blogImage/${Date.now()}-${fileName}`;
+        const baseName = path.parse(fileName).name;
+
+        const s3Key = `uploads/blogImage/${Date.now()}-${baseName}.webp`;
+
+        const absolutePath = path.resolve(process.cwd(), "..", filePath);
     
-        const newOptimizeImgPath = `${filePath}.webp`
-    
-        const optimizeImg = await optimizeImage(filePath,newOptimizeImgPath);
-    
+        const newOptimizeImgPath = await optimizeImage(absolutePath,`${absolutePath}.webp`);
+
         const fileBuffer = fs.readFileSync(newOptimizeImgPath);
     
         const command = new PutObjectCommand({
@@ -37,22 +44,60 @@ const blogImageWorker = new Worker("blog-image-processing",async(job)=>{
         
         await updateBlog(getBlog,{coverImageUrl:fileUrl,coverImageKey:s3Key,status:"published",publishedAt:new Date()})
     
-        fs.unlinkSync(filePath);
-        fs.unlinkSync(newOptimizeImgPath)
+
+        try {
+            if (absolutePath) {
+                await fs.promises.unlink(absolutePath);
+            }
+
+            if (newOptimizeImgPath) {
+                await fs.promises.unlink(newOptimizeImgPath);
+            }
+        } catch (err) {
+            console.error("Error deleting file:", err);
+        }
     
     } catch (error) {
         console.log(
             `Attempt ${job.attemptsMade + 1} of ${job.opts.attempts}`
         );
+        throw error;
+    }finally{
+        await redis.del(lockKey);
     }
 },{
     connection: redis
+}).on("completed", (job) => {
+    console.log(`Job ${job.id} completed`);
+}).on("failed", (job, err) => {
+    console.log(`Job ${job.id} failed:`, err.message);
 })
 
-blogImageWorker.on("completed", (job) => {
-    console.log(`Job ${job.id} completed`);
-});
+const delBlogImageWorker = new Worker("del-blog-img-processing",async(job)=>{
+    console.log("Delete blog image worker job received!!")
 
-blogImageWorker.on("failed", (job, err) => {
+    const {coverImageKey} = job.data
+
+    try {
+
+        await s3.send(
+            new DeleteObjectCommand({
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: coverImageKey
+            })
+        )
+
+        console.log("Blog image was deleted successfully from s3 server")
+    } catch (error) {
+        console.log(
+            `Attempt ${job.attemptsMade + 1} of ${job.opts.attempts}`
+        );
+    }
+
+},{
+    connection: redis
+}).on("completed", (job) => {
+    console.log(`Job ${job.id} completed`);
+}).on("failed", (job, err) => {
     console.log(`Job ${job.id} failed:`, err.message);
 })

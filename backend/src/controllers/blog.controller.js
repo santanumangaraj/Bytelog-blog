@@ -1,4 +1,5 @@
-import { getAllBlogs, getBlogById, publishBlog } from "../services/blog.service.js"
+import { deleteABlog, getAllBlogs, getBlogById, publishBlog } from "../services/blog.service.js"
+import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -6,21 +7,36 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 
 const publish = asyncHandler(async(req , res)=>{
 
-
-    const newBlog = await publishBlog(req.user?.id,req.body,req.files)
-
-
-    if(!newBlog){
-        throw new ApiError(500,"Something went wrong while uploading the blog!!")
-    }
-
-    return res
-    .status(202)
-    .json(
-        new ApiResponse(202,
+    try {
+        const newBlog = await publishBlog(req.user?.id,req.body,req.files)
+    
+        if(!newBlog){
+            throw new ApiError(500,"Something went wrong while uploading the blog!!")
+        }
+    
+        const response = new ApiResponse(
+            201,
             newBlog,
-            "Blog accepted for processing.")
-    )
+            "Blog published successfully"
+        );
+    
+        await completeRequest(
+            req.idempotencyKey,
+            {
+                statusCode: 201,
+                body: response
+            }
+        )
+    
+        return res
+        .status(202)
+        .json(
+            response
+        )
+    } catch (error) {
+        await deleteRequest(req.idempotencyKey);
+        throw error;
+    }
 })
 
 const getBlog = asyncHandler(async (req, res)=>{
@@ -53,8 +69,21 @@ const fetchedAllBlogs = asyncHandler(async(req,res)=>{
         )
     )
 })
+
+const delBlog = asyncHandler(async (req,res)=>{
+    
+    const deletedBlog = await deleteABlog(req.params,req.user?.id)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,deletedBlog,"Blog deleted successfully")
+    )
+})
+
 export {
     publish,
     getBlog,
-    fetchedAllBlogs
+    fetchedAllBlogs,
+    delBlog
 }

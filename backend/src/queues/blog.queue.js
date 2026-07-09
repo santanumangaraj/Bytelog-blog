@@ -5,7 +5,11 @@ const blogImageUploadQueue = new Queue("blog-image-processing",{
     connection: redis
 })
 
+const delBlogImgQueue = new Queue("del-blog-img-processing",{
+    connection: redis
+})
 
 export {
-    blogImageUploadQueue
+    blogImageUploadQueue,
+    delBlogImgQueue
 }

@@ -1,9 +1,11 @@
+import { Op } from "sequelize"
 import { blogImageUploadQueue } from "../queues/blog.queue.js"
-import { createBlog, findOneBlog } from "../repository/blog.repository.js"
+import { createBlog, findAndCountAllBlogs, findBlogByPk, findOneBlog } from "../repository/blog.repository.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { generateExcerpt } from "../utils/excerpt.utils.js"
 import createUniqueSlug from "../utils/slug.utils.js"
+import { createCacheData, getCacheData } from "./redisBlog.service.js"
 
 
 
@@ -42,78 +44,93 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
         return blog
 }
 
-/*
-const getBlogById = asyncHandler(async (req, res)=>{
-    const {blogId} = req.params
+const getBlogById = async ({blogId})=>{
 
     if(!blogId){
         throw new ApiError(400,"Blog id is required")
     }
 
-    const blog = await Blog.findById(blogId)
+    const blog = await findBlogByPk(blogId)
 
-    if(!blog){
-        throw new ApiError(404,"Blog not found")
+    return blog;
+}
+
+const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="desc",author})=>{
+
+    const pageNum = Number(page)
+    const limitNum = Number(limit)
+    const offset = (pageNum-1) * limitNum;
+
+    const cacheKey = `cache:blogs:${page}:${limit}:${query || ""}:${sortBy || ""}:${sortType || ""}:${author || ""}`;
+
+    const cachedData = await getCacheData(cacheKey)
+
+    if(cachedData){
+        console.log("Blogs fetched from cache!!")
+        return cachedData
     }
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,blog,"Blog fetched successfully")
-    )
-})
-
-const getAllBlogs = asyncHandler(async (req, res)=>{
-    const {page=1,limit=10, query,sortBy,sortType,author} = req.query
-
-    const pageNum = parseInt(page)
-    const limitNum = parseInt(limit)
-    const skip = (pageNum-1) * limitNum;
-
-    const filter = {};
+    const where = {};
 
     if(query){
-        filter.$or=[
-            {title: {$regex:query,$options: "i"}},
-            {content: {$regex:query,$options: "i"}}
-        ];
+        where[Op.or] = [
+            {
+                title:{
+                    [Op.like]: `%${query}%`
+                },
+            },
+            {
+                slug:{
+                    [Op.like]: `%${query}%`
+                },
+            },
+        ]
     }
 
     if(author){
-        filter.author = author
+        where.author = author
     }
 
-    const allowedSortFields = ["createdAt", "title"];
-    const sortOptions = {};
+    const allowedSortFields = ["createdAt", "title","views","publishedAt"];
+    const order = [];
 
-    if (sortBy && allowedSortFields.includes(sortBy)) {
-        sortOptions[sortBy] = sortType === "asc" ? 1 : -1;
+    if (allowedSortFields.includes(sortBy)) {
+        order.push([
+            sortBy,
+            sortType.toLowerCase() === "asc" ? "asc" : "desc",
+        ]);
     } else {
-        sortOptions.createdAt = -1;
+        order.push(["createdAt", "DESC"]);
     }
 
-    const blogs = await Blog.find(filter)
-    .populate("author", "fullName")
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limitNum)
+    const {rows,count } = await findAndCountAllBlogs({
+        where,
+        order,
+        offset,
+        limit: limitNum,
+    });
 
-    const totalBlogs = await Blog.countDocuments(filter);
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,{
-            totalBlogs,
-            currentPage: pageNum,
-            totalPages : Math.ceil((totalBlogs/ limitNum)),
-            blogs
-        },
-        !blogs?.length? "No blogs found!!":"blogs loaded successfully"
-        )
-    )
-})
+    const AllBlogsdata = { 
+            rows,
+            pagination: {
+                totalBlogs: count,
+                currentPage: pageNum,
+                totalPages: Math.ceil(count / limitNum),
+                limit: limitNum,
+            }
+        }
 
+
+    const setCacheData = await createCacheData(cacheKey,AllBlogsdata,60)
+
+    console.log("Blogs fetched from Db!!")
+
+    return AllBlogsdata
+
+}
+
+/*
 const updateBlogDetails = asyncHandler(async (req, res) => {
     const { blogId } = req.params
     let { title, tags } = req.body
@@ -199,5 +216,7 @@ const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
 */
 
 export {
-    publishBlog
+    publishBlog,
+    getBlogById,
+    getAllBlogs
 }

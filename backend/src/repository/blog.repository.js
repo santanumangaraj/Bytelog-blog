@@ -16,6 +16,7 @@ const createBlog = async(data)=>{
 const findBlogByPk = async(blogId)=>{
     return await Blog.findByPk(blogId)
 }
+
 const updateBlog = async(blog,data)=>{
     return await blog.update(data)
 }
@@ -24,8 +25,26 @@ const deleteBlogs = async(blogDb)=>{
     return await blogDb.destroy();
 }
 
-const findAndCountAllBlogs = async(data)=>{
-    return await Blog.findAndCountAll(data)
+const findAndCountAllBlogs = async({
+                where,
+                include=[],
+                order,
+                offset,
+                limit: limitNum,
+            })=>{
+
+
+        const query ={
+                where,
+                order,
+                offset,
+                limit: limitNum,
+            }
+            
+            if(include.length){
+                query.include = include
+            }
+    return await Blog.findAndCountAll(query)
 }
 export {
     findOneBlog,

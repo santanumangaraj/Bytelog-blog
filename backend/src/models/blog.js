@@ -17,6 +17,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:"blogId",
         otherKey:"likedBy"
       })
+
+      blog.belongsTo(models.user,{
+        foreignKey: "author",
+        as:"authorDetails"
+      })
     }
   }
   blog.init({

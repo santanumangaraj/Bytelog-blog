@@ -1,4 +1,4 @@
-import { Op } from "sequelize"
+import { Model, Op } from "sequelize"
 import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
 import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog } from "../repository/blog.repository.js"
 import { ApiError } from "../utils/ApiError.js"
@@ -109,9 +109,16 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
             } else {
                 order.push(["createdAt", "DESC"]);
             }
+
+            const include = [{
+                association:"authorDetails",
+                attributes: ["id","username","fullName","email","avatar",]
+            }]
+
         
             const {rows,count } = await findAndCountAllBlogs({
                 where,
+                include,
                 order,
                 offset,
                 limit: limitNum,
@@ -128,7 +135,7 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
                     }
                 }
 
-                return AllBlogsdata
+            return AllBlogsdata
         }    
     })    
 
@@ -197,7 +204,57 @@ const getBlogBySlug = async({slug})=>{
     })
 }
 
+const getUserBlogs = async(userId,{page,limit, query,sortBy="createdAt",sortType="desc"})=>{
 
+    if(!userId){
+        throw new ApiError(400,"userid is required")
+    }
+
+    const pageNum = Number(page)
+    const limitNum = Number(limit)
+    const offset = (pageNum-1) * limitNum;
+
+    const where ={}
+
+    if(query){
+        where.title={
+            [Op.like]:`%${query}%`
+        } 
+    }
+
+    where.author = userId
+        
+    const allowedSortFields = ["createdAt", "title","views","publishedAt"];
+    const order = [];
+        
+    if (allowedSortFields.includes(sortBy)) {
+        order.push([
+            sortBy,
+            sortType.toLowerCase() === "asc" ? "asc" : "desc",
+        ]);
+    } else {
+        order.push(["createdAt", "DESC"]);
+    }
+
+
+    const {rows,count } = await findAndCountAllBlogs({
+        where,
+        order,
+        offset,
+        limit: limitNum,
+    });
+        
+    const AllUsersBlogsdata = { 
+        rows,
+        pagination: {
+            totalBlogs: count,
+            currentPage: pageNum,
+            totalPages: Math.ceil(count / limitNum),
+            limit: limitNum,
+        }
+    }
+    return AllUsersBlogsdata
+}
 
 
 
@@ -274,5 +331,6 @@ export {
     getBlogById,
     getBlogBySlug,
     getAllBlogs,
-    deleteABlog
+    deleteABlog,
+    getUserBlogs
 }

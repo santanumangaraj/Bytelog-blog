@@ -1,4 +1,4 @@
-import { deleteABlog, getAllBlogs, getBlogById, publishBlog } from "../services/blog.service.js"
+import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, publishBlog } from "../services/blog.service.js"
 import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -81,9 +81,21 @@ const delBlog = asyncHandler(async (req,res)=>{
     )
 })
 
+const fetchedBlogBySlug = asyncHandler(async(req,res)=>{
+    
+    const blog = await getBlogBySlug(req.params)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,blog,"Blog by slug fetched successfully")
+    )
+    
+})
 export {
     publish,
     getBlog,
+    fetchedBlogBySlug,
     fetchedAllBlogs,
     delBlog
 }

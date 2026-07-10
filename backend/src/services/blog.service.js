@@ -176,8 +176,26 @@ const deleteABlog = async ({blogId},userId)=>{
     return getBlog
 }
 
+const getBlogBySlug = async({slug})=>{
+    if(!slug){
+        throw new ApiError(400,"Slug is required")
+    }
 
+    return await cacheAside({
+        key: cacheKey.getBlogBySlug(slug),
+        ttl:60 * 5,
+        loader:async()=>{
 
+            const getBlog = await findOneBlog({slug,status:"published"})
+
+            if(!getBlog){
+                throw new ApiError(404,"Blog not found!!")
+            }
+
+            return getBlog
+        }
+    })
+}
 
 
 
@@ -254,6 +272,7 @@ const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
 export {
     publishBlog,
     getBlogById,
+    getBlogBySlug,
     getAllBlogs,
     deleteABlog
 }

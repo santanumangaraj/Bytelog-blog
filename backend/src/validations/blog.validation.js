@@ -18,9 +18,18 @@ const publishSchema = Joi.object({
 })
 
 const getBlogByIdSchema = Joi.object({
-    blogId: Joi.number().integer()
-    .positive()
-    .required(),
+    blogId: Joi.string()
+        .trim()
+        .lowercase()
+        .pattern(/^[a-z0-9-]+$/)
+        .min(5)
+        .required()
+        .messages({
+            "string.pattern.base": "Invalid blog slug format"
+        })
+})
+const getBlogBySlugSchema = Joi.object({
+    slug: Joi.string().trim().min(5).required()
 })
 
 const getAllBlogsSchema = Joi.object({
@@ -69,5 +78,6 @@ export {
     publishSchema,
     getAllBlogsSchema,
     getBlogByIdSchema,
+    getBlogBySlugSchema,
     deleteBlogSchema
 }

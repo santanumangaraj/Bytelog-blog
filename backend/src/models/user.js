@@ -17,6 +17,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "likedBy",
         otherKey: "blogId"
       })
+
+      user.hasMany(models.blog,{
+        foreignKey:"author",
+        as:"userBlogs"
+      })
     }
   }
   user.init({

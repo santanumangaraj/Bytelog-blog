@@ -1,4 +1,5 @@
-import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, publishBlog } from "../services/blog.service.js"
+import blog from "../models/blog.js"
+import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, publishBlog } from "../services/blog.service.js"
 import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -63,7 +64,7 @@ const fetchedAllBlogs = asyncHandler(async(req,res)=>{
     .json(
         new ApiResponse(200,{
             pagination,
-            blogs: rows
+            rows
         },
         !rows?.length? "No blogs found!!":"blogs loaded successfully"
         )
@@ -92,10 +93,29 @@ const fetchedBlogBySlug = asyncHandler(async(req,res)=>{
     )
     
 })
+
+const fetchedOwnerBlogs = asyncHandler(async(req,res)=>{
+
+    const {rows,pagination} = await getUserBlogs(req.user?.id,req.query)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{
+            pagination,
+            rows
+        },
+        !rows?.length? "No blogs found!!":"User blogs loaded successfully"
+        )
+    )
+})
+
+
 export {
     publish,
     getBlog,
     fetchedBlogBySlug,
     fetchedAllBlogs,
-    delBlog
+    delBlog,
+    fetchedOwnerBlogs
 }

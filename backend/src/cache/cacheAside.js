@@ -76,19 +76,24 @@ export const cacheAside = async ({
 
         const data = await loader();
 
-        const randomTTL =
-            ttl + Math.floor(Math.random() * 30);
+        const records = data.rows ?? data;
 
-        await createCacheData(
-            key,
-            data,
-            randomTTL
-        );
-
-        console.log("Database HIT");
+        if(Array.isArray(records) && records.length > 0){
+            const randomTTL =
+                ttl + Math.floor(Math.random() * 30);
+    
+            await createCacheData(
+                key,
+                data,
+                randomTTL
+            );
+    
+            console.log("Database HIT");
+    
+            return data;
+        }
 
         return data;
-
     }
     finally {
 

@@ -16,7 +16,13 @@ const doValidate = (schema,property="body")=>{
             });
         }
 
-        req[property] = value;
+        if (property === "query") {
+            Object.assign(req.query, value);
+        } else if (property === "params") {
+            Object.assign(req.params, value);
+        } else {
+            req.body = value;
+        }
 
         next();
     }

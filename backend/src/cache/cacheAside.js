@@ -67,7 +67,7 @@ export const cacheAside = async ({
 
         if (finalCache) {
 
-            return JSON.parse(finalCache);
+            return finalCache;
 
         }
 

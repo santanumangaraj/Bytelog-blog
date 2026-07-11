@@ -25,16 +25,18 @@ const Login=()=>{
         e.preventDefault();
         setErr("")
         setLoading(true)
-        setSuccess(true)
+        
 
         try{
             const res = await loginUser(form)
             login(res.data)
+            setSuccess(true)
             setTimeout(()=>{
                 navigate("/")
                 setSuccess(false)
             },2000)
         }catch(err){
+            setSuccess(false)
             setErr(err.response?.data?.message || "Login failed")
         }finally{
             setLoading(false)

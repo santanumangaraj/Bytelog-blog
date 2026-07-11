@@ -31,7 +31,7 @@ const Register=()=>{
         e.preventDefault();
         setErr("")
         setLoading(true)
-        setSuccess(true)
+        
 
         try{
             const formData = new FormData();
@@ -46,13 +46,15 @@ const Register=()=>{
             }
 
             const res = await registerUser(formData)
+            setSuccess(true)
             setTimeout(()=>{
-                navigate("/")
+                navigate("/login")
                 setSuccess(false)
             },2000)
             console.log(res)
         }catch(err){
             setErr(err.response?.data.message || "Signup failed")
+            setSuccess(false)
         }finally{
             setLoading(false)
         }

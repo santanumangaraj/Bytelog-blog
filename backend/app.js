@@ -28,6 +28,9 @@ import blogRouter from "./src/routes/blog.route.js"
 import likeRouter from "./src/routes/like.route.js"
 import { errorHandler } from "./src/middlewares/error.middleware.js";
 
+app.use("/home",(req,res)=>{
+    res.send("Welcome")
+})
 app.use("/api/v2/users",userRouter)
 app.use("/api/v2/blogs",blogRouter)
 app.use("/api/v2/likes",likeRouter)

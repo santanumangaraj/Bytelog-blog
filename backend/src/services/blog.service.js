@@ -1,6 +1,6 @@
 import { Model, Op } from "sequelize"
 import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
-import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog } from "../repository/blog.repository.js"
+import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog, updateBlog } from "../repository/blog.repository.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { generateExcerpt } from "../utils/excerpt.utils.js"
@@ -34,6 +34,8 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
         if(!lockKey){
             throw new ApiError(409,'Image processing is already in progress.')
         }
+
+        await deleteCache("cache:blogs:*")
         
         await blogImageUploadQueue.add("blog-image-process",{
             blogId:blog.id,
@@ -65,13 +67,13 @@ const getBlogById = async ({blogId})=>{
     return blog;
 }
 
-const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="desc",author})=>{
+const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="desc"})=>{
 
     const pageNum = Number(page)
     const limitNum = Number(limit)
     const offset = (pageNum-1) * limitNum;
 
-    const filters = {page,limit, query,sortBy,sortType,author}
+    const filters = {page,limit, query,sortBy,sortType}
 
     return await cacheAside({
         key: cacheKey.getAllBlogs(filters),
@@ -91,11 +93,12 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
                             [Op.like]: `%${query}%`
                         },
                     },
+                    {
+                        "$authorDetails.fullName$": {
+                            [Op.like]: `%${query}%`,
+                        },
+                    },
                 ]
-            }
-        
-            if(author){
-                where.author = author
             }
         
             const allowedSortFields = ["createdAt", "title","views","publishedAt"];
@@ -256,75 +259,65 @@ const getUserBlogs = async(userId,{page,limit, query,sortBy="createdAt",sortType
     return AllUsersBlogsdata
 }
 
-
-
-
-
-
-/*
-const updateBlogDetails = asyncHandler(async (req, res) => {
-    const { blogId } = req.params
-    let { title, tags } = req.body
+const updateABlog = async({blogId},{title,content,excerpt},userId)=>{
 
     if (!blogId) {
         throw new ApiError(400, "Blog id is required")
     }
 
-    if (!title && !tags) {
+    if (!title && !excerpt && !content) {
         throw new ApiError(400, "At least one field is required")
     }
 
-    if (typeof tags === "string") {
-        tags = JSON.parse(tags)
-    }
-        
-    const isOwner = await Blog.findOne({author:req.user?._id})
+    const isOwner = await findOneBlog({author:userId})
 
     if(!isOwner){
         throw new ApiError(401,"Unauthorized access!! Blog can be update by author only")
     }
 
-    const blog = await Blog.findByIdAndUpdate(
-        blogId,
-        {
-            $set: {
-                ...(title && { title }),
-                ...(tags && { tags })
-            }
-        },
-        { new: true }
-    )
 
-    return res.status(200).json(
-        new ApiResponse(200, blog, "Blog details updated successfully")
-    )
-})
+    await updateBlog(isOwner,{
+        title,
+        excerpt,
+        content
+    })
 
-const togglePublishBlogStatus = asyncHandler(async (req, res)=>{
-    const {blogId} = req.params
-    const {status} = req.body
+    await deleteCache("cache:blogs:*")
+
+    return isOwner
+    
+}
+
+const toggleBlogStatus =async ({blogId},{status},userId)=>{
 
     if(!blogId){
         throw new ApiError(400,"Blog id is required")
     }
     
-    const blog = await Blog.findById(blogId)
+    const blog = await findBlogByPk(blogId)
 
     if(!blog){
         throw new ApiError(404,"Blog not found")
     }
 
-    blog.status = status
-    blog.isPublished = status === "published" ? true:false;
-    await blog.save()
+    if(blog.author !== userId){
+        throw new ApiError(401,"Unauthorized access!! Blog status can be update by author only")
+    }
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,blog,"Video Published status update successfully")
-    )
-})
-*/
+    if(blog.status === status){
+        return {blog:null,msg:`Blog was already in ${status} mode`}
+    }
+
+    const publishedAt = blog.status === "published" ? null : new Date();
+    if(blog.status === "published"){
+
+    }
+
+    await updateBlog(blog,{status:status,publishedAt})
+
+    return {blog,msg:"Blog Published status update successfully"}
+
+}
 
 export {
     publishBlog,
@@ -332,5 +325,7 @@ export {
     getBlogBySlug,
     getAllBlogs,
     deleteABlog,
-    getUserBlogs
+    getUserBlogs,
+    updateABlog,
+    toggleBlogStatus
 }

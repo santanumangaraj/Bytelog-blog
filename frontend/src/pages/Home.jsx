@@ -1,31 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { getAllBlogs,getBlogLikeCount } from "../routes/api.js";
+import { getAllBlogs } from "../routes/api.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
+// import { faHeart } from "@fortawesome/free-solid-svg-icons";
 
 const Home=()=>{
 
-    const [blogs,setBlogs] = useState({blogs:[]})
-    const featuredBlog = blogs?.blogs[0]
-    const [featuredBlogLike,setFeaturedBlogLike] = useState(0)
-
+    const [blogs,setBlogs] = useState([])
+    const featuredBlog = blogs[0]
+    // const [featuredBlogLike,setFeaturedBlogLike] = useState(0)
+    
     useEffect(()=>{
         const handleFetchingBlogs = async()=>{
             try {
-                const res = await getAllBlogs(
-                //     {
-                //     params:{
-                //         page:1 , 
-                //         limit: 10,
-                //         query: "",
-                //         author:"",
-                //         sortType:"",
-                //         sortBy:""
-    
-                //     }
-                // }
-            )
-                setBlogs(res.data.data)
+                const res = await getAllBlogs({
+                    page:1,
+                    limit:10,
+                    query:"",
+                    sortBy:"createdAt",
+                    sortType:"desc"
+                })
+                setBlogs(res.data.data.rows)
             } catch (error) {
                 console.log("err:" ,error)
             }
@@ -34,20 +28,20 @@ const Home=()=>{
         handleFetchingBlogs()
     },[]);
     
-    useEffect(()=>{
+    // useEffect(()=>{
         
-        if(!featuredBlog?._id) return;
+    //     if(!featuredBlog?.id) return;
 
-        const handleFetchingBlogsLikes = async()=>{
-            try{
-                const res = await getBlogLikeCount(blogs?.blogs?.[0]._id)
-                setFeaturedBlogLike(res.data.data.likedCount)
-            }catch(error){
-                console.log("err:", error)
-            }
-        }
-        handleFetchingBlogsLikes()
-    },[featuredBlog]);
+    //     const handleFetchingBlogsLikes = async()=>{
+    //         try{
+    //             const res = await getBlogLikeCount(blogs?.blogs?.[0].id)
+    //             // setFeaturedBlogLike(res.data.data.likedCount)
+    //         }catch(error){
+    //             console.log("err:", error)
+    //         }
+    //     }
+    //     handleFetchingBlogsLikes()
+    // },[featuredBlog]);
 
     const blogSkeleton = () =>{
         return(
@@ -114,9 +108,10 @@ const Home=()=>{
         )
     }
 
+
     return(
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
-            {!blogs?.blogs?.length ? blogSkeleton() :
+            {!blogs?.length ? blogSkeleton() :
             (<>
             <div className=" card card-compact bg-base-100 shadow-xl  border-base-300 md:col-span-2">
                 <div className="fab relative">
@@ -133,54 +128,64 @@ const Home=()=>{
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>New Blog</div>
                 </div>
-                <img src={featuredBlog?.image} className="w-full h-52 sm:h-80 object-cover rounded-md" alt="blog image"/>
+                <img src={featuredBlog?.coverImageUrl} className="w-full h-52 sm:h-80 object-cover rounded-md" alt="blog image"/>
                 <div className="card-body">
                     <p className="card-title text-xl sm:text-4xl lg:text-5xl font-barlow font-medium hover:underline hover:cursor-pointer">{featuredBlog?.title} </p>
-                    <p className="text-xs sm:text-lg">{featuredBlog?.content}</p>
+                    <p className="text-xs sm:text-lg">{featuredBlog?.excerpt}</p>
                     <div className="flex justify-between gap-3 text-xs sm:text-sm text-base-content/60 font-semibold text-base-400">
                         <div className="flex gap-3">
-                            <p>{featuredBlog?.author.fullName}</p>
-                            <p>{new Date(featuredBlog?.createdAt).toLocaleDateString()}</p>
+                            <p>{featuredBlog?.authorDetails.fullName}</p>
+                            <p>{new Date(featuredBlog?.createdAt).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                            })}</p>
                         </div>
-                        <span><FontAwesomeIcon icon={faHeart}/>{featuredBlogLike}</span>
+                        {/* <span><FontAwesomeIcon icon={faHeart}/>{featuredBlogLike}</span> */}
                     </div>
                 </div>
             </div>
             <div className="flex flex-col w-full md:col-span-2 lg:col-span-1">
                 <h2 className="text-xl font-semibold  border-b-2 border-[#FF2DAA]">Featured Posts</h2>
                 <ul className="flex flex-col gap-3 mt-5">
-                {blogs.blogs.slice(1,6).map((blog,_)=>(
-                        <li key={blog._id} className="border-b-2 border-base-300 py-3 last:border-0">
+                {blogs.slice(1,6).map((blog)=>(
+                        <li key={blog.id} className="border-b-2 border-base-300 py-3 last:border-0">
                             <p className="text-base sm:text-xl font-barlow font-medium hover:underline hover:cursor-pointer">{blog.title}</p>
                             <div className="flex justify-between text-xs sm:text-sm font-semibold py-2 text-base-content/60">
-                                <p>{blog.author.fullName}</p>
-                                <p>{new Date(blog.createdAt).toLocaleDateString()}</p>
+                                <p>{blog.authorDetails.fullName}</p>
+                                <p>{new Date(blog.createdAt).toLocaleDateString("en-GB", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                })}</p>
                             </div>
                         </li>
                 ))}
                 </ul>
             </div>
-                {blogs.blogs.slice(2,5).map((blog,_)=>(
-                <div key={blog._id} className="card card-compact bg-base-100 shadow-xl">
+                {blogs.slice(2,5).map((blog)=>(
+                <div key={blog.id} className="card card-compact bg-base-100 shadow-xl">
                     <figure className="px-5 pt-5">
                         <img
-                        src={blog.image}
+                        src={blog.coverImageUrl}
                         alt="Shoes" 
                         className="rounded-xl h-36 w-full object-cover"
                         />
                     </figure>
                     <div className="card-body">
                         <h2 className="card-title text-lg hover:underline hover:cursor-pointer">{blog.title}</h2>
-                        <p >{blog.content}</p>
+                        <p >{blog.excerpt}</p>
                         <div className="flex flex-col justify-start text-base-content/60 mt-2 font-semibold">
-                            <p>{blog.author.fullName}</p>
-                            <p>{new Date(blog.createdAt).toLocaleDateString()}</p>
+                            <p>{blog.authorDetails.fullName}</p>
+                            <p>{new Date(blog.createdAt).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                            })}</p>
                         </div>
                     </div>
                 </div>
                 ))}
-
-            
             </>)}
         </div>
     )

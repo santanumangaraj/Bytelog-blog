@@ -101,11 +101,6 @@ const getAllBlogsSchema = Joi.object({
         .valid("asc", "desc")
         .insensitive()
         .default("desc"),
-
-    author: Joi.number()
-        .integer()
-        .positive()
-        .optional(),
 });
 
 const deleteBlogSchema = getBlogByIdSchema;

@@ -1,7 +1,7 @@
 import {Router} from "express"
 import {uploadBlogImage} from "../middlewares/multer.middleware.js";
 import { verifyJWT} from "../middlewares/auth.middleware.js"
-import { delBlog, fetchedAllBlogs, fetchedBlogBySlug, fetchedOwnerBlogs, getBlog, publish } from "../controllers/blog.controller.js";
+import { delBlog, fetchedAllBlogs, fetchedBlogBySlug, fetchedOwnerBlogs, getBlog, incrementView, publish, toggleStatus, updateBlog } from "../controllers/blog.controller.js";
 import { doValidate } from "../middlewares/validate.middleware.js";
 import { deleteBlogSchema, getAllBlogsSchema, getAllUserBlogsSchema, getBlogByIdSchema, getBlogBySlugSchema, publishSchema } from "../validations/blog.validation.js";
 import idempotencyMiddleware from "../middlewares/idempotency.middleware.js";
@@ -26,7 +26,11 @@ router.get("/me",verifyJWT,doValidate(getAllUserBlogsSchema,"query"),fetchedOwne
 
 router.delete("/delete-blog/:blogId",verifyJWT,doValidate(deleteBlogSchema,"params"),delBlog)
 
+router.patch("/:blogId",verifyJWT,updateBlog)
 
+router.patch("/:blogId/status",verifyJWT,toggleStatus)
+
+router.patch("/:blogId/view",incrementView)
 // router.route("/update-blog-details/:blogId").patch(verifyJWT,updateBlogDetails)
 // router.route("/toggle/publish/:blogId").patch(verifyJWT,togglePublishBlogStatus)
 

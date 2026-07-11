@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const API = axios.create({
-    baseURL:"http://localhost:8000/api/v2",
+    baseURL:"http://localhost:8001/api/v2",
     withCredentials: true
 });
 
@@ -20,7 +20,7 @@ export const loginUser = (data)=> API.post("/users/login",data);
 export const registerUser = (data)=> API.post("/users/register",data);
 
 //blog route
-export const getAllBlogs = (params)=> API.get("/blogs/",params);
+export const getAllBlogs = (params)=> API.get("/blogs",{params});
 
 //likes route
 export const getBlogLikeCount = (params) => API.get(`/likes/count/${params}`);

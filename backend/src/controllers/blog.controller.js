@@ -1,5 +1,5 @@
 import blog from "../models/blog.js"
-import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, publishBlog } from "../services/blog.service.js"
+import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, publishBlog, toggleBlogStatus, updateABlog } from "../services/blog.service.js"
 import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -110,6 +110,28 @@ const fetchedOwnerBlogs = asyncHandler(async(req,res)=>{
     )
 })
 
+const updateBlog = asyncHandler(async(req,res)=>{
+
+    const updatedBlog = await updateABlog(req.params,req.body,req.user?.id)
+
+    return res.status(200).json(
+        new ApiResponse(200, updatedBlog, "Blog details updated successfully")
+    )
+})
+
+const toggleStatus = asyncHandler(async(req,res)=>{
+
+    const {blog,msg} = await toggleBlogStatus(req.params,req.body,req.user?.id);
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,blog,msg)
+    )
+})
+
+const incrementView = asyncHandler(async(req,res)=>{
+
+})
 
 export {
     publish,
@@ -117,5 +139,8 @@ export {
     fetchedBlogBySlug,
     fetchedAllBlogs,
     delBlog,
-    fetchedOwnerBlogs
+    fetchedOwnerBlogs,
+    updateBlog,
+    toggleStatus,
+    incrementView
 }

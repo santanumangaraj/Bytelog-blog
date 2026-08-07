@@ -3,26 +3,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBarsStaggered} from "@fortawesome/free-solid-svg-icons"
 import {faAddressBook, faHouse, faNewspaper, faUser} from "@fortawesome/free-regular-svg-icons"
 import { NavLink } from "react-router-dom";
-import { useAuth } from "./AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 const NavBar = ()=>{
     const {user, logout} = useAuth();
-    const [theme, setTheme] = useState(() => {
-        return localStorage.getItem("theme") === "night" ? "night" : "cupcake";
-    });
-
-    useEffect(()=>{
-        const savedTheme = localStorage.getItem("theme") || 'cupcake'
-        document.documentElement.setAttribute("data-theme",savedTheme)
-    },[])
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("theme", theme);
-    }, [theme]);
+    const { theme , setTheme } = useTheme();
 
     const toggleTheme = (e) => {
-        setTheme(e.target.value === "cupcake" ? "night" : "cupcake");
+        setTheme(e.target.value);
     };
 
     const themeToggler = ()=>{

@@ -5,7 +5,9 @@ import Home from "./Home";
 import { useState } from "react";
 import { useEffect } from "react";
 import { getAllBlogs } from "../routes/api";
+import { useTheme } from "../context/ThemeContext.jsx";
 import blogTitleBg from "../assets/blogTitleBG.jpg";
+import blogTitleLightBg from "../assets/blogTitleLightBg.jpg";
 
 
 const Blogs = ()=>{
@@ -14,6 +16,7 @@ const Blogs = ()=>{
         rows:[]
     })
     const [loading,setLoading] = useState(false)
+    const {theme}  = useTheme()
         // const [featuredBlogLike,setFeaturedBlogLike] = useState(0)
     const [form,setForm] = useState({
             page:1,
@@ -39,6 +42,7 @@ const Blogs = ()=>{
     }
 
     useEffect(()=>{
+
         const handleFetchingBlogs = async()=>{
             try {
                 setLoading(true)
@@ -59,7 +63,7 @@ const Blogs = ()=>{
     const blogSkeleton = ()=>{
         return (
             <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 w-full lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
             {Array.from({ length: 6 }).map((_, index) => (
                 <div
                 key={index}
@@ -101,11 +105,16 @@ const Blogs = ()=>{
         
     return(
         <div className="flex flex-col justify-center items-center text-3xl">
-            <div className="hero min-h-[35rem] bg-base-200 "
-            style={{
-                backgroundImage:
-                `url(${blogTitleBg})`,
-            }}>
+            <div
+                className="hero min-h-[35rem]"
+                style={{
+                    backgroundImage: `url(${
+                    theme === "night" ? blogTitleBg : blogTitleLightBg 
+                    })`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                }}
+                >
                 <div className="hero-content text-center text-primary">
                     <div className="max-w-md">
                         <h1 className="text-5xl font-bold ">Explore Blogs</h1>
@@ -165,7 +174,8 @@ const Blogs = ()=>{
 
             </div>
 
-            {/* home section */}{loading ? blogSkeleton():
+            {/* home section */}
+            {loading ? blogSkeleton():
             (<>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
                 {blogs.rows.map((blog)=>(

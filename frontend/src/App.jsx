@@ -7,12 +7,14 @@ import Register from "./pages/Register"
 import About from "./pages/About"
 import Blogs from "./pages/Blogs"
 import Contact from "./pages/Contact"
+import AddBlog from "./pages/AddBlog"
 
 const App=()=>{
   const routes = createBrowserRouter(createRoutesFromElements(
     <Route path="/" element={<RootLayout/>}>
       <Route path="/" element={<HomeLayout/>}>
         <Route index element={<Home/>}/>
+        <Route path="/add" element={<AddBlog/>}/>
         <Route path="/about" element={<About/>}/>
         <Route path="/blogs" element={<Blogs/>}/>
         <Route path="/contact" element={<Contact/>}/>

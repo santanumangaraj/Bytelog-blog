@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getAllBlogs } from "../routes/api.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import AddBlog from "./AddBlog.jsx";
+import { useNavigate } from "react-router-dom";
 // import { faHeart } from "@fortawesome/free-solid-svg-icons";
 
 const Home=()=>{
@@ -8,7 +10,8 @@ const Home=()=>{
     const [blogs,setBlogs] = useState([])
     const featuredBlog = blogs[0]
     // const [featuredBlogLike,setFeaturedBlogLike] = useState(0)
-    
+
+    const navigate = useNavigate();
     useEffect(()=>{
         const handleFetchingBlogs = async()=>{
             try {
@@ -114,7 +117,7 @@ const Home=()=>{
             {!blogs?.length ? blogSkeleton() :
             (<>
             <div className=" card card-compact bg-base-100 shadow-xl  border-base-300 md:col-span-2">
-                <div className="fab relative">
+                <div className="fab relative" onClick={()=>navigate("/add")}>
                     <div tabIndex={0} role="button" className="btn btn-primary shadow-xl absolute -right-5 -translate-y-12 lg:-right-96 lg:-translate-y-11 ">
                     <svg
                     aria-label="New"
@@ -128,6 +131,7 @@ const Home=()=>{
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>New Blog</div>
                 </div>
+
                 <img src={featuredBlog?.coverImageUrl} className="w-full h-52 sm:h-80 object-cover rounded-md" alt="blog image"/>
                 <div className="card-body">
                     <p className="card-title text-xl sm:text-4xl lg:text-5xl font-barlow font-medium hover:underline hover:cursor-pointer">{featuredBlog?.title} </p>

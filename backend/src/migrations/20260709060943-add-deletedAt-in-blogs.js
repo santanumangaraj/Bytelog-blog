@@ -1,21 +1,21 @@
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up (queryInterface, Sequelize) {
+export default {
+  async up(queryInterface, Sequelize) {
     /**
      * Add altering commands here.
      *
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addColumn("blogs","deletedAt",{
+    await queryInterface.addColumn('blogs', 'deletedAt', {
       type: Sequelize.DATE,
-      defaultValue: Sequelize.NOW
-    })
+      defaultValue: Sequelize.NOW,
+    });
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface) {
     /**
      * Add reverting commands here.
      *
@@ -23,6 +23,6 @@ module.exports = {
      * await queryInterface.dropTable('users');
      */
 
-    await queryInterface.removeColumn("blogs","deletedAt")
-  }
+    await queryInterface.removeColumn('blogs', 'deletedAt');
+  },
 };

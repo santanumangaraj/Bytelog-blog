@@ -1,47 +1,47 @@
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('likes', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       blogId: {
         type: Sequelize.INTEGER,
-        allowNull:false,
+        allowNull: false,
         unique: true,
-        references:{
-          model:"blogs",
-          key:"id"
+        references: {
+          model: 'blogs',
+          key: 'id',
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE"
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       likedBy: {
         type: Sequelize.INTEGER,
-        allowNull:false,
+        allowNull: false,
         unique: true,
-        references:{
-          model:"users",
-          key:"id"
+        references: {
+          model: 'users',
+          key: 'id',
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE"
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('likes');
-  }
+  },
 };

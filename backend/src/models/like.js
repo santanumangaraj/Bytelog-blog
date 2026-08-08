@@ -1,8 +1,8 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
+
+import { Model } from 'sequelize';
+
+export default (sequelize, DataTypes) => {
   class like extends Model {
     /**
      * Helper method for defining associations.
@@ -11,39 +11,44 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      like.belongsToMany(models.blog,{
-        through: "blogLikes",
-        as:"likedBlogs",
-        foreignKey:"LikeId"
-      })
+      like.belongsToMany(models.blog, {
+        through: 'blogLikes',
+        as: 'likedBlogs',
+        foreignKey: 'LikeId',
+      });
     }
   }
-  like.init({
-    blogId: {
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      validate:{
-        notNull:{msg:"blogId is required"},
-        notEmpty:{msg:"blogId can't be empty"}
-      }
+
+  like.init(
+    {
+      blogId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: { msg: 'blogId is required' },
+          notEmpty: { msg: "blogId can't be empty" },
+        },
+      },
+      likedBy: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: { msg: 'likedBy is required' },
+          notEmpty: { msg: "likedBy can't be empty" },
+        },
+      },
     },
-    likedBy: {
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      validate:{        
-        notNull:{msg:"likedBy is required"},
-        notEmpty:{msg:"likedBy can't be empty"}
-      }
-    }
-  }, {
-    sequelize,
-    modelName: 'like',
-    indexes: [
-      {
+    {
+      sequelize,
+      modelName: 'like',
+      indexes: [
+        {
           unique: true,
-          fields: ["blogId", "likedBy"]
-      }
-    ]
-  });
+          fields: ['blogId', 'likedBy'],
+        },
+      ],
+    }
+  );
+
   return like;
 };

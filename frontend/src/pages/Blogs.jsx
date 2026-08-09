@@ -1,229 +1,147 @@
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import React from "react";
-import Home from "./Home";
-import { useState } from "react";
-import { useEffect } from "react";
-import { getAllBlogs } from "../routes/api";
-import { useTheme } from "../context/ThemeContext.jsx";
-import blogTitleBg from "../assets/blogTitleBG.jpg";
-import blogTitleLightBg from "../assets/blogTitleLightBg.jpg";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAllBlogs } from "../routes/api.js";
+import { Reveal, SectionHeading } from "../components/blog/blogUi.jsx";
+import BlogHero from "../components/blog/BlogHero.jsx";
+import BlogFilters from "../components/blog/BlogFilters.jsx";
+import FeaturedBlog from "../components/blog/FeaturedBlog.jsx";
+import BlogCard from "../components/blog/BlogCard.jsx";
+import BlogSkeleton from "../components/blog/BlogSkeleton.jsx";
+import BlogPagination from "../components/blog/BlogPagination.jsx";
+import {
+    EmptyBlogState,
+    BlogErrorState,
+} from "../components/blog/StateCard.jsx";
 
+const INITIAL_FORM = {
+    page: 1,
+    limit: 10,
+    query: "",
+    sortBy: "createdAt",
+    sortType: "desc",
+};
 
-const Blogs = ()=>{
-    const [blogs,setBlogs] = useState({
-        pagination:{},
-        rows:[]
-    })
-    const [loading,setLoading] = useState(false)
-    const {theme}  = useTheme()
-        // const [featuredBlogLike,setFeaturedBlogLike] = useState(0)
-    const [form,setForm] = useState({
-            page:1,
-            limit:10,
-            query:"",
-            sortBy:"createdAt",
-            sortType:"desc"
-        })
-    
-    const handleChange = (e)=>{
-        setForm({
-            ...form,[e.target.name]:e.target.value
-        })
-    }
+const Blogs = () => {
+    const navigate = useNavigate();
 
-    const handleReset = ()=>{
-        setForm((prev)=>({
-            ...prev,
-            query:"",
-            sortBy:"createdAt",
-            sortType:"desc"
-        }))
-    }
+    const [form, setForm] = useState(INITIAL_FORM);
+    const [queryInput, setQueryInput] = useState("");
+    const [blogs, setBlogs] = useState({ rows: [], pagination: {} });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    useEffect(()=>{
+    /* debounce the search box into form.query (resets to page 1) */
+    useEffect(() => {
+        const id = setTimeout(() => {
+            setForm((prev) =>
+                prev.query === queryInput
+                    ? prev
+                    : { ...prev, query: queryInput, page: 1 },
+            );
+        }, 400);
+        return () => clearTimeout(id);
+    }, [queryInput]);
 
-        const handleFetchingBlogs = async()=>{
-            try {
-                setLoading(true)
-                const res = await getAllBlogs(form)
-                setBlogs({
-                    pagination:res.data.data.pagination,
-                    rows:res.data.data.rows
-                })
-            } catch (error) {
-                console.log("err:" ,error)
-            }finally{
-                setLoading(false)
-            }
+    const fetchBlogs = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await getAllBlogs(form);
+            const data = res.data.data;
+            setBlogs({ rows: data?.rows ?? [], pagination: data?.pagination ?? {} });
+        } catch (err) {
+            setError(err);
+            setBlogs({ rows: [], pagination: {} });
+        } finally {
+            setLoading(false);
         }
-        handleFetchingBlogs()
-    },[form]);
+    }, [form]);
 
-    const blogSkeleton = ()=>{
-        return (
-            <>
-            <div className="grid grid-cols-1 md:grid-cols-2 w-full lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
-            {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                key={index}
-                className="card card-compact bg-base-100 shadow-xl"
-                >
-                <div className="px-5 pt-5">
-                    <div className="skeleton h-36 w-full rounded-xl"></div>
-                </div>
+    useEffect(() => {
+        fetchBlogs();
+    }, [fetchBlogs]);
 
-                <div className="card-body space-y-3">
-                    <div className="skeleton h-6 w-3/4"></div>
+    const openBlog = (blog) => {
+        if (blog?.id) navigate(`/blogs/${blog.id}`);
+    };
 
-                    <div className="space-y-2">
-                    <div className="skeleton h-4 w-full"></div>
-                    <div className="skeleton h-4 w-5/6"></div>
-                    <div className="skeleton h-4 w-2/3"></div>
-                    </div>
+    const handleReset = () => {
+        setQueryInput("");
+        setForm(INITIAL_FORM);
+    };
 
-                    <div className="mt-4 space-y-2">
-                    <div className="skeleton h-4 w-1/2"></div>
-                    <div className="skeleton h-4 w-1/3"></div>
-                    </div>
-                </div>
-                </div>
-            ))}
-            </div>
+    const handlePageChange = (page) => {
+        setForm((prev) => ({ ...prev, page }));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
-            <div className="join justify-center my-4">
-            {Array.from({ length: 5 }).map((_, index) => (
-                <div
-                key={index}
-                className="join-item skeleton h-10 w-10 rounded-md"
-                ></div>
-            ))}
-            </div>
-            </>
-        )
-    }
-        
-    return(
-        <div className="flex flex-col justify-center items-center text-3xl">
-            <div
-                className="hero min-h-[35rem]"
-                style={{
-                    backgroundImage: `url(${
-                    theme === "night" ? blogTitleBg : blogTitleLightBg 
-                    })`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                }}
-                >
-                <div className="hero-content text-center text-primary">
-                    <div className="max-w-md">
-                        <h1 className="text-5xl font-bold ">Explore Blogs</h1>
-                        <p className="py-6">
-                            Discover articles from developers around the world..
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 p-3 bg-base-100  rounded-lg shadow-md my-3">
+    const featured = blogs.rows[0];
+    const rest = useMemo(() => blogs.rows.slice(1), [blogs.rows]);
+    const currentPage = blogs.pagination?.currentPage ?? form.page;
+    const totalPages = blogs.pagination?.totalPages ?? 1;
 
-            {/* Search */}
-            <div className="relative flex-1 min-w-[220px]">
-                <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="absolute text-lg left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
+    
+    return (
+        <main className="min-h-screen bg-base-200/40">
+            <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+                <BlogHero />
 
-                <input
-                type="search"
-                name="query"
-                onChange={handleChange}
-                placeholder="Search..."
-                className="input input-bordered w-full pl-10 pr-2  focus:border-[#FF2DAA] focus:outline-none focus:ring-1 focus:ring-[#FF2DAA]"
-                />
-            </div>
-
-            {/* Sort Field */}
-            <select
-                defaultValue="" name="sortBy"
-                className="select select-bordered w-40" onChange={handleChange}
-            >
-                <option value="" >
-                Sort By
-                </option>
-                <option value="createdAt">Created At</option>
-                <option value="publishedAt">Published At</option>
-                <option value="views">Views</option>
-            </select>
-
-            {/* Sort Order */}
-            <select
-                defaultValue="" name="sortType"
-                className="select select-bordered w-32" onChange={handleChange}
-            >
-                <option value="" disabled>
-                Order
-                </option>
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-            </select>
-
-            {/* Reset Button */}
-            <button className="btn btn-outline btn-primary" onClick={handleReset}>
-                Reset
-            </button>
-
-            </div>
-
-            {/* home section */}
-            {loading ? blogSkeleton():
-            (<>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-7 lg:mx-32 xl:mx-44 my-12">
-                {blogs.rows.map((blog)=>(
-                <div key={blog.id} className="card card-compact bg-base-100 shadow-xl">
-                    <figure className="px-5 pt-5">
-                        <img
-                        src={blog.coverImageUrl}
-                        alt="Shoes" 
-                        className="rounded-xl h-36 w-full object-cover"
-                        />
-                    </figure>
-                    <div className="card-body">
-                        <h2 className="card-title text-lg hover:underline hover:cursor-pointer">{blog.title}</h2>
-                        <p >{blog.excerpt}</p>
-                        <div className="flex flex-col justify-start text-base-content/60 mt-2 font-semibold">
-                            <p>{blog.authorDetails.fullName}</p>
-                            <p>{new Date(blog.createdAt).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            })}</p>
-                        </div>
-                    </div>
-                </div>))}
-            </div>
-
-            <div className="join justify-center my-2">
-                {
-                    Array.from(
-                        {length: blogs?.pagination?.totalPages || 0},
-                        (_,index)=>{
-                            const page = index + 1;
-
-                            return (
-                                <button key={page} name="page" value={page} className={`join-item btn ${page === blogs.pagination?.currentPage? "btn-active": ""}`}
-                                onClick={handleChange}>
-                                    {page}
-                                </button>
-                            )
+                <div className="mt-10">
+                    <BlogFilters
+                        query={queryInput}
+                        sortBy={form.sortBy}
+                        sortType={form.sortType}
+                        onQueryChange={setQueryInput}
+                        onSortByChange={(sortBy) =>
+                            setForm((p) => ({ ...p, sortBy, page: 1 }))
                         }
-                    )
-                }
-            </div>
-            </>)
-            
-            }
-        </div>
-    )
-}
+                        onSortTypeChange={(sortType) =>
+                            setForm((p) => ({ ...p, sortType, page: 1 }))
+                        }
+                        onReset={handleReset}
+                    />
+                </div>
 
-export default Blogs
+                <div className="mt-14">
+                    {loading ? (
+                        <BlogSkeleton />
+                    ) : error ? (
+                        <BlogErrorState onRetry={fetchBlogs} />
+                    ) : blogs.rows.length === 0 ? (
+                        <EmptyBlogState onClear={handleReset} />
+                    ) : (
+                        <>
+                            <section>
+                                <SectionHeading label="Editor's pick" title="Featured Story" />
+                                <Reveal>
+                                    <FeaturedBlog blog={featured} onOpen={openBlog} />
+                                </Reveal>
+                            </section>
+
+                            {rest.length > 0 && (
+                                <section className="mt-16">
+                                    <SectionHeading label="Keep reading" title="All Articles" />
+                                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                        {rest.map((blog, i) => (
+                                            <Reveal key={blog?.id ?? i} delay={i * 80}>
+                                                <BlogCard blog={blog} onOpen={openBlog} />
+                                            </Reveal>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            <BlogPagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
+                    )}
+                </div>
+            </div>
+        </main>
+    );
+};
+
+export default Blogs;

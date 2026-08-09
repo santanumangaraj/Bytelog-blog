@@ -21,6 +21,7 @@ export const registerUser = (data)=> API.post("/users/register",data);
 
 //blog route
 export const getAllBlogs = (params)=> API.get("/blogs",{params});
+export const createBlog = (formData)=> API.post("/blogs/upload-blog", formData);
 
 //likes route
 export const getBlogLikeCount = (params) => API.get(`/likes/count/${params}`);

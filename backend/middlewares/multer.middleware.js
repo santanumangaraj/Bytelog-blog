@@ -11,39 +11,28 @@ const uploadAvatar = multer({
             cb(null,{fieldName: file.fieldname});
         },
         key: function(req,file,cb){
-            const fileName = `uploads/userAvatars/${Date.now()}-${file.originalname}`
-            cb(null,fileName)
+            const fileName = `uploads/userAvatars/${Date.now()}-${file.originalname}`;
+            cb(null,fileName);
         }
     })
-})
-// const uploadBlogImage = multer({
-//     storage: multerS3({
-//         s3,
-//         bucket: process.env.AWS_BUCKET_NAME,
-//         contentType: multerS3.AUTO_CONTENT_TYPE,
-//         metadata: function(req,file,cb){
-//             cb(null,{fieldName: file.fieldname});
-//         },
-//         key: function(req,file,cb){
-//             const fileName = `uploads/blogImage/${Date.now()}-${file.originalname}`
-//             cb(null,fileName)
-//         }
-//     })
-// })
+});
 
-const blogStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "./public/temp")
-    },
-    filename: function (req, file, cb) {
-        const fileName = `${Date.now()}-${file.originalname}`
-        cb(null, fileName)
-    }
-})
-
-const uploadBlogImage = multer({storage:blogStorage})
+const uploadBlogImage = multer({
+    storage: multerS3({
+        s3,
+        bucket: process.env.AWS_BUCKET_NAME,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        metadata: function(req,file,cb){
+            cb(null,{fieldName: file.fieldname});
+        },
+        key: function(req,file,cb){
+            const fileName = `uploads/blogImage/original/${Date.now()}-${file.originalname}`;
+            cb(null,fileName);
+        }
+    })
+});
 
 export {
     uploadAvatar,
     uploadBlogImage
-}
+};

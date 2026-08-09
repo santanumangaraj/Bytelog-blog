@@ -18,18 +18,21 @@ const registerUser = async (data) => {
         throw new ApiError(409, "Either User with email or username already exists")
     }
 
-    const avatarPath = data.files?.avatar[0]?.key;
+    const avatarPathKey = data.files?.avatar[0]?.key;
 
-    if (!avatarPath) {
+    if (!avatarPathKey) {
         throw new ApiError(400, "Avatar file is required")
     }
+
+    const avatarImageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${avatarPathKey}`;
 
     const hashedPassword = await bcrypt.hash(password,10)
     const newUser = await createUser({
         username: username,
         fullName: fullName,
         email: email,
-        avatar: avatarPath,
+        avatarImageKey: avatarPathKey,
+        avatarImageUrl,
         password: hashedPassword,
     })
 

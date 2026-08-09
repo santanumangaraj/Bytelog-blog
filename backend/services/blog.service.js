@@ -12,7 +12,7 @@ import {  cacheKey } from "../cache/cacheKey.js"
 
 
 
-const publishBlog = async(userId,{title,content,status},{image})=>{
+const publishBlog = async(userId,{title,content,status},{coverImage})=>{
 
         if(!title || !content){
             throw new ApiError(400,"All fields are required")
@@ -29,6 +29,8 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
             author:userId
         })
 
+        
+
         const lockKey = cacheKey.blogImageLock(blog.id)
 
         if(!lockKey){
@@ -36,11 +38,14 @@ const publishBlog = async(userId,{title,content,status},{image})=>{
         }
 
         await deleteCache("cache:blogs:*")
+            console.log("[PublishBlog]\n")
+
+        console.log("CoverImage:",coverImage[0])
         
         await blogImageUploadQueue.add("blog-image-process",{
             blogId:blog.id,
-            filePath: image[0].path,
-            fileName: image[0].originalname,
+            filePath: coverImage[0].path,
+            fileName: coverImage[0].originalname,
         },
         {
             attempts: 5,

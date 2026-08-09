@@ -1,16 +1,20 @@
 import sharp from "sharp";
 
-export const optimizeImage = async (inputPath, outputPath) => {
+export const optimizeImage = async (inputBuffer) => {
+    if (!Buffer.isBuffer(inputBuffer)) {
+        throw new TypeError("optimizeImage expects a Buffer input");
+    }
+
     try {
-        await sharp(inputPath)
+        const optimizedBuffer = await sharp(inputBuffer)
             .resize({
                 width: 1280,
                 withoutEnlargement: true,
             })
             .webp({ quality: 80 })
-            .toFile(outputPath);
+            .toBuffer();
 
-        return outputPath;
+        return optimizedBuffer;
     } catch (err) {
         console.error("Sharp Error:", err);
         throw err;

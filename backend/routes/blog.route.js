@@ -10,7 +10,7 @@ const router = Router()
 
 router.post("/upload-blog", uploadBlogImage.fields([
     {
-        name: "image",
+        name: "coverImage",
         maxCount: 1
     }
 ]), verifyJWT, doValidate(publishSchema), idempotencyMiddleware, publish)
@@ -31,4 +31,4 @@ router.patch("/:blogId/status", verifyJWT, doValidate(getBlogByIdSchema, "params
 
 router.patch("/:blogId/view", doValidate(getBlogByIdSchema, "params"), incrementView)
 
-export default router
+export default router

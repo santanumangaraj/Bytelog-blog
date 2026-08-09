@@ -17,8 +17,8 @@ import { getApiErrorMessage, getFieldErrors } from "../components/addBlog/apiErr
 const INITIAL_FORM = {
   title: "",
   excerpt: "",
-  blog_content: "",
-  blog_type: "",
+  content: "",
+  // blog_type: "",
   status: "draft",
 };
 
@@ -60,8 +60,8 @@ const AddBlog = () => {
       Boolean(
         form.title.trim() ||
           form.excerpt.trim() ||
-          form.blog_content.trim() ||
-          form.blog_type ||
+          form.content.trim() ||
+          // form.blog_type ||
           coverFile,
       ),
     [form, coverFile],
@@ -100,11 +100,11 @@ const AddBlog = () => {
       next.title = "Title should be at least 5 characters.";
 
     if (forPublish) {
-      if (!form.blog_content.trim()) next.blog_content = "Blog content is required.";
-      else if (form.blog_content.trim().length < 50)
-        next.blog_content = "Write at least 50 characters before publishing.";
+      if (!form.content.trim()) next.content = "Blog content is required.";
+      else if (form.content.trim().length < 50)
+        next.content = "Write at least 50 characters before publishing.";
       if (!form.excerpt.trim()) next.excerpt = "Excerpt is required to publish.";
-      if (!form.blog_type) next.blog_type = "Choose a blog type.";
+      // if (!form.blog_type) next.blog_type = "Choose a blog type.";
       if (!coverFile) next.coverImage = "A cover image is required to publish.";
     }
 
@@ -132,10 +132,11 @@ const AddBlog = () => {
       const data = new FormData();
       data.append("title", form.title.trim());
       data.append("excerpt", form.excerpt.trim());
-      data.append("blog_content", form.blog_content);
-      if (form.blog_type) data.append("blog_type", form.blog_type);
+      data.append("content", form.content);
+      // if (form.blog_type) data.append("blog_type", form.blog_type);
       data.append("status", status);
-      if (coverFile) data.append("coverImage", coverFile);
+      console.log("CoverFile:",coverFile)
+      if (coverFile) data.append("coverImageKey", coverFile);
 
       const res = await createBlog(data);
       const created = res?.data?.data;
@@ -225,10 +226,10 @@ const AddBlog = () => {
             <BlogPreview
               title={form.title}
               excerpt={form.excerpt}
-              content={form.blog_content}
+              content={form.content}
               coverUrl={coverUrl}
               author={user?.fullName || user?.username || user?.name}
-              blogType={form.blog_type}
+              // blogType={form.blog_type}
               status={form.status}
             />
           </div>
@@ -246,9 +247,9 @@ const AddBlog = () => {
                 error={errors.excerpt}
               />
               <BlogContentEditor
-                value={form.blog_content}
-                onChange={(v) => setField("blog_content", v)}
-                error={errors.blog_content}
+                value={form.content}
+                onChange={(v) => setField("content", v)}
+                error={errors.content}
               />
             </div>
 
@@ -263,13 +264,13 @@ const AddBlog = () => {
                 }}
                 error={errors.coverImage}
               />
-              <BlogSettings
+              {/* <BlogSettings
                 blogType={form.blog_type}
                 status={form.status}
                 onBlogTypeChange={(v) => setField("blog_type", v)}
                 onStatusChange={(v) => setField("status", v)}
                 error={errors.blog_type}
-              />
+              /> */}
             </aside>
           </div>
         )}

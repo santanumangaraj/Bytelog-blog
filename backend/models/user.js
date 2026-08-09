@@ -30,12 +30,20 @@ export default (sequelize, DataTypes) => {
           notEmpty: { msg: "email can't be empty" },
         },
       },
-      avatar: {
+      avatarImageKey: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notNull: { msg: "avatar is required" },
-          notEmpty: { msg: "avatar can't be empty" },
+          notNull: { msg: "avatarImageKey is required" },
+          notEmpty: { msg: "avatarImageKey can't be empty" },
+        },
+      },
+      avatarImageUrl: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: { msg: "avatarImageUrl is required" },
+          notEmpty: { msg: "avatarImageUrl can't be empty" },
         },
       },
       password: {

@@ -92,7 +92,7 @@ const NavBar = ()=>{
                             <div className="w-10 rounded-full">
                             <img
                                 alt="user avatar"
-                                src={user.avatar} />
+                                src={user.avatarImageUrl} />
                             </div>
                         </div>
                         <ul

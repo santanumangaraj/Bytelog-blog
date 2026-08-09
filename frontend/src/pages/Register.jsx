@@ -14,7 +14,7 @@ const Register=()=>{
         password:""
     })
     const [avatarFile,setAvatarFile] = useState({
-        avatar:null
+        avatarImageKey:null
     })
 
     const handleChange=(e)=>{
@@ -42,7 +42,7 @@ const Register=()=>{
             formData.append("password",form.password)
 
             if(avatarFile.avatar){
-                formData.append("avatar",avatarFile.avatar)
+                formData.append("avatar",avatarFile.avatarImageKey)
             }
 
             const res = await registerUser(formData)

@@ -30,7 +30,7 @@ const findByIdentifier = async(identifier)=>{
 const findUserByPk = async(userId)=>{
 
     return await User.findByPk(userId, {
-        attributes: ["id","username", "fullName", "email","avatar"]
+        attributes: ["id","username", "fullName", "email","avatarImageUrl"]
     })
 }
 const findByPkWithAllFields = async(userId)=>{

@@ -10,6 +10,6 @@ COPY . .
 
 ENV NODE_ENV=production
 
-EXPOSE 8001
+EXPOSE 8002
 
 CMD ["npm", "start"]

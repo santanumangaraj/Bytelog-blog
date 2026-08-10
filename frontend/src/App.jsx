@@ -8,6 +8,9 @@ import About from "./pages/About"
 import Blogs from "./pages/Blogs"
 import Contact from "./pages/Contact"
 import AddBlog from "./pages/AddBlog"
+import Profile from "./pages/Profile.jsx"
+import BlogDetails from "./pages/BlogDetails"
+import BlogsLayout from "./layout/BlogsLayout"
 
 const App=()=>{
   const routes = createBrowserRouter(createRoutesFromElements(
@@ -16,7 +19,13 @@ const App=()=>{
         <Route index element={<Home/>}/>
         <Route path="/add" element={<AddBlog/>}/>
         <Route path="/about" element={<About/>}/>
-        <Route path="/blogs" element={<Blogs/>}/>
+        <Route path="/blogs" element={<BlogsLayout />}>
+          <Route index element={<Blogs />} />
+          {/* <Route path="id/:blogId" element={<BlogDetails />} /> */}
+          <Route path="s/:slug" element={<BlogDetails />} />
+        </Route>
+
+        <Route path="/profile" element={<Profile/>}/>
         <Route path="/contact" element={<Contact/>}/>
       </Route>
       <Route path="/login" element={<Login/>}/>

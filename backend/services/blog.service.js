@@ -84,7 +84,9 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
         key: cacheKey.getAllBlogs(filters),
         ttl: 60,
         loader: async ()=>{
-            const where = {};
+            const where = {
+                status: "published",
+            };
         
             if(query){
                 where[Op.or] = [
@@ -120,7 +122,7 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
 
             const include = [{
                 association:"authorDetails",
-                attributes: ["id","username","fullName","email","avatar",]
+                attributes: ["id","username","fullName","email","avatarImageUrl"]
             }]
 
         

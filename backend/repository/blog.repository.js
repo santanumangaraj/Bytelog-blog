@@ -40,7 +40,6 @@ const findAndCountAllBlogs = async({
                 offset,
                 limit: limitNum,
             }
-            
             if(include.length){
                 query.include = include
             }

@@ -424,7 +424,7 @@ const Home = () => {
     }, [handleFetchingBlogs]);
 
     const openBlog = (blog) => {
-        if (blog?.id) navigate(`/blogs/${blog.id}`);
+        if (blog?.id) navigate(`/blogs/s/${blog.slug}`);
     };
 
     const featuredPosts = blogs.slice(1, 6);

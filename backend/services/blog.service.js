@@ -38,12 +38,10 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
         }
 
         await deleteCache("cache:blogs:*")
-            console.log("[PublishBlog]\n")
-
-        console.log("CoverImage:",coverImage[0])
         
         await blogImageUploadQueue.add("blog-image-process",{
             blogId:blog.id,
+            status:status ?? null,
             filePath: coverImage[0].path,
             fileName: coverImage[0].originalname,
         },

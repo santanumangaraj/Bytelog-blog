@@ -24,7 +24,7 @@ const streamToBuffer = async (body) => {
 const blogImageWorker = new Worker("blog-image-processing", async (job) => {
     console.log("Worker received job");
 
-    const { blogId, originalImageKey, fileName } = job.data;
+    const { blogId,status, originalImageKey, fileName } = job.data;
 
     if (!blogId || !originalImageKey) {
         throw new Error("Job payload must include blogId and originalImageKey");
@@ -38,8 +38,6 @@ const blogImageWorker = new Worker("blog-image-processing", async (job) => {
     }
 
     try {
-        console.log("originalImageKey:", originalImageKey);
-
         const originalImage = await s3.send(
             new GetObjectCommand({
                 Bucket: process.env.AWS_BUCKET_NAME,
@@ -69,11 +67,12 @@ const blogImageWorker = new Worker("blog-image-processing", async (job) => {
             throw new Error(`Blog with id ${blogId} was not found while processing the image`);
         }
 
+        
         try {
             await updateBlog(blog, {
                 coverImageUrl: fileUrl,
                 coverImageKey: optimizedKey,
-                status: "published",
+                status:status ?? "published",
                 publishedAt: new Date(),
             });
         } catch (dbError) {

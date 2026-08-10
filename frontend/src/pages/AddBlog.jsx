@@ -143,7 +143,7 @@ const AddBlog = () => {
 
       if (forPublish) {
         setSuccess("Your blog has been published.");
-        if (created?.id) navigate(`/blogs/${created.id}`);
+        if (created?.id) navigate(`/blogs/s/${created.slug}`);
         else navigate("/blogs");
         return;
       }

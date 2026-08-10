@@ -38,7 +38,6 @@ const BlogDetails = () => {
     setNotFound(false);
     try {
       const res = await getBlogBySlug(slug);
-      console.log("Blog by id:",res.data)
       const data = res.data?.data ?? res.data;
       const item = data?.rows?.[0] ?? data?.blog ?? data;
       if (!item?.id) throw new Error("not-found");

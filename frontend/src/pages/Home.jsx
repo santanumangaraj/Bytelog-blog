@@ -79,16 +79,16 @@ const SectionHeading = ({ label, title, action }) => (
     );
 
     const NewBlogButton = ({ onClick, className = "" }) => (
-    <button
-        type="button"
-        onClick={onClick}
-        className={`btn border-0 gap-2 rounded-full px-6 font-semibold text-white shadow-md transition hover:scale-[1.03] hover:shadow-xl ${className}`}
-        style={{ backgroundImage: `linear-gradient(135deg, ${CYAN}, ${PINK})` }}
-    >
-        <FontAwesomeIcon icon={faPlus} className="text-sm" />
-        New Blog
-    </button>
-);
+        <button
+            type="button"
+            onClick={onClick}
+            className={`btn border-0 gap-2 rounded-full px-6 font-semibold text-white shadow-md transition hover:scale-[1.03] hover:shadow-xl ${className}`}
+            style={{ backgroundImage: `linear-gradient(135deg, ${CYAN}, ${PINK})` }}
+        >
+            <FontAwesomeIcon icon={faPlus} className="text-sm" />
+            New Blog
+        </button>
+    );
 
 const Meta = ({ author, date, className = "" }) => (
     <div

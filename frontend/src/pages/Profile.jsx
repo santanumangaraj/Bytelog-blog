@@ -81,7 +81,7 @@ const Profile = () => {
   if (!authUser) return <Navigate to="/login" replace />;
 
   const openBlog = (blog) => {
-    if (blog?.id) navigate(`/blog/${blog.id}`);
+    if (blog?.id) navigate(`/blogs/s/${blog.slug}`);
   };
 
   const handlePageChange = (next) => {

@@ -214,7 +214,7 @@ const getBlogBySlug = async({slug})=>{
     })
 }
 
-const getUserBlogs = async(userId,{page,limit, query,sortBy="createdAt",sortType="desc"})=>{
+const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sortType="desc"})=>{
 
     if(!userId){
         throw new ApiError(400,"userid is required")

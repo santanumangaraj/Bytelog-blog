@@ -37,6 +37,9 @@ services:
     ports:
       - "8002:8002"
 
+    volumes:
+      - ./backend/public/temp:/app/public/temp
+
     depends_on:
       redis:
         condition: service_healthy
@@ -57,6 +60,9 @@ services:
 
     environment:
       IS_DOCKER: "true"
+
+    volumes:
+      - ./backend/public/temp:/app/public/temp
 
     depends_on:
       redis:

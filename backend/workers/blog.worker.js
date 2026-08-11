@@ -1,33 +1,60 @@
 import "dotenv/config";
 import path from "path";
+import fs from "fs";
 import s3 from "../config/s3.js";
 import redis from "../config/redis.js";
 import { Worker } from "bullmq";
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { findBlogByPk, updateBlog } from "../repository/blog.repository.js";
 import { optimizeImage } from "../utils/optimizeImage.utils.js";
 import { cacheKey } from "../cache/cacheKey.js";
-
-const streamToBuffer = async (body) => {
-    if (!body) {
-        throw new Error("S3 object body is empty");
-    }
-
-    const chunks = [];
-    for await (const chunk of body) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-
-    return Buffer.concat(chunks);
-};
+import { releaseLock } from "../cache/redisLock.js";
 
 const blogImageWorker = new Worker("blog-image-processing", async (job) => {
     console.log("Worker received job");
 
-    const { blogId,status, originalImageKey, fileName } = job.data;
+    const { blogId, status, tempFilePath, originalFileName } = job.data;
 
-    if (!blogId || !originalImageKey) {
-        throw new Error("Job payload must include blogId and originalImageKey");
+    console.log("Status from worker: ", status);
+    if (!blogId || !tempFilePath) {
+        throw new Error("Job payload must include blogId and tempFilePath");
+    }
+
+    const blog = await findBlogByPk(blogId);
+    if (!blog) {
+        throw new Error(`Blog with id ${blogId} was not found while processing the image`);
+    }
+
+    const optimizedKey = `uploads/blogImage/blog-${blogId}.webp`;
+    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${optimizedKey}`;
+
+    // Extract base filename and resolve it relative to the local public/temp directory to handle Windows host/Linux container hybrids.
+    const cleanPath = tempFilePath.replace(/\\/g, "/");
+    const tempFileName = path.basename(cleanPath);
+    const resolvedTempPath = path.resolve("public/temp", tempFileName);
+
+    // Verify if temporary file exists on the local server
+    let tempFileExists = false;
+    try {
+        await fs.promises.access(resolvedTempPath, fs.constants.F_OK);
+        tempFileExists = true;
+    } catch (err) {
+        // Temporary file does not exist
+    }
+
+    // Idempotency: If database already contains S3 URL + Key and temp file is gone, mark job as completed.
+    if (blog.coverImageUrl === fileUrl && blog.coverImageKey === optimizedKey && !tempFileExists) {
+        console.log(`Blog image processing already completed for blogId ${blogId}. No temp file found, marking job success.`);
+        return {
+            blogId,
+            optimizedKey,
+            fileUrl,
+            alreadyProcessed: true
+        };
+    }
+
+    if (!tempFileExists) {
+        throw new Error(`Temporary image file does not exist for blog ID ${blogId} at path: ${resolvedTempPath} (origin: ${tempFilePath})`);
     }
 
     const lockKey = cacheKey.blogImageLock(blogId);
@@ -38,19 +65,10 @@ const blogImageWorker = new Worker("blog-image-processing", async (job) => {
     }
 
     try {
-        const originalImage = await s3.send(
-            new GetObjectCommand({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: originalImageKey,
-            })
-        );
+        // Compress/resize/optimize local image using Sharp
+        const optimizedBuffer = await optimizeImage(resolvedTempPath);
 
-        const originalBuffer = await streamToBuffer(originalImage.Body);
-        const optimizedBuffer = await optimizeImage(originalBuffer);
-
-        const baseName = path.parse(fileName || originalImageKey.split("/").pop() || "blog-image").name;
-        const optimizedKey = `uploads/blogImage/${Date.now()}-${baseName}.webp`;
-
+        // Upload the optimized WebP buffer to AWS S3
         await s3.send(
             new PutObjectCommand({
                 Bucket: process.env.AWS_BUCKET_NAME,
@@ -60,56 +78,42 @@ const blogImageWorker = new Worker("blog-image-processing", async (job) => {
             })
         );
 
-        const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${optimizedKey}`;
-        const blog = await findBlogByPk(blogId);
+        // Update blog database record
+        await updateBlog(blog, {
+            coverImageUrl: fileUrl,
+            coverImageKey: optimizedKey,
+            status: status ?? "published",
+            publishedAt: new Date(),
+        });
 
-        if (!blog) {
-            throw new Error(`Blog with id ${blogId} was not found while processing the image`);
-        }
+        // Delete local temporary file
+        await fs.promises.unlink(resolvedTempPath);
+        console.log("Blog image processed, uploaded to S3, and temporary file deleted successfully");
 
-        
-        try {
-            await updateBlog(blog, {
-                coverImageUrl: fileUrl,
-                coverImageKey: optimizedKey,
-                status:status ?? "published",
-                publishedAt: new Date(),
-            });
-        } catch (dbError) {
-            try {
-                await s3.send(
-                    new DeleteObjectCommand({
-                        Bucket: process.env.AWS_BUCKET_NAME,
-                        Key: optimizedKey,
-                    })
-                );
-            } catch (cleanupError) {
-                console.error("Failed to clean up optimized image after DB update failure:", cleanupError);
-            }
-            throw dbError;
-        }
-
-        await s3.send(
-            new DeleteObjectCommand({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: originalImageKey,
-            })
-        );
-
-        console.log("Blog image processed and original object deleted from S3 successfully");
         return {
             blogId,
-            originalImageKey,
             optimizedKey,
             fileUrl,
         };
     } catch (error) {
-        console.log(
-            `Attempt ${job.attemptsMade + 1} of ${job.opts.attempts}`
-        );
+        console.error(`Attempt ${job.attemptsMade + 1} of ${job.opts.attempts} failed:`, error);
+
+        // Clean up temp file only on the final failure to prevent storage leaks
+        const maxAttempts = job.opts.attempts || 5;
+        if (job.attemptsMade + 1 >= maxAttempts) {
+            console.warn(`Job for blogId ${blogId} has failed all attempts. Cleaning up temporary file: ${resolvedTempPath}`);
+            try {
+                await fs.promises.unlink(resolvedTempPath);
+            } catch (unlinkErr) {
+                if (unlinkErr.code !== "ENOENT") {
+                    console.error(`Failed to clean up temporary file ${resolvedTempPath} on final failure:`, unlinkErr);
+                }
+            }
+        }
+
         throw error;
     } finally {
-        await redis.del(lockKey);
+        await releaseLock(lockKey, job.id);
     }
 }, {
     connection: redis,

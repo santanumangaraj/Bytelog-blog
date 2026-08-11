@@ -18,6 +18,10 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
             throw new ApiError(400,"All fields are required")
         }
 
+        if (!coverImage || !Array.isArray(coverImage) || coverImage.length === 0 || !coverImage[0].path) {
+            throw new ApiError(400, "Cover image is required");
+        }
+
         const slug = await createUniqueSlug(title);
         const excerpt =await  generateExcerpt(content);
         
@@ -29,25 +33,20 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
             author:userId
         })
 
-        
-
-        const lockKey = cacheKey.blogImageLock(blog.id)
-
-        if(!lockKey){
-            throw new ApiError(409,'Image processing is already in progress.')
-        }
-
         await deleteCache("cache:blogs:*")
         
+        console.log("Status from ui: ", status)
+        console.log("coverImage: ", coverImage[0])
+        
         await blogImageUploadQueue.add("blog-image-process",{
-            blogId:blog.id,
-            status:status ?? null,
-            filePath: coverImage[0].path,
-            fileName: coverImage[0].originalname,
+            blogId: blog.id,
+            status: status ?? "draft",
+            tempFilePath: coverImage[0].path,
+            originalFileName: coverImage[0].originalname,
         },
         {
             attempts: 5,
-            jobId:`blog-image-${blog.id}`,
+            jobId: `blog-image-${blog.id}`,
             backoff: {
                 type: "exponential",
                 delay: 5000

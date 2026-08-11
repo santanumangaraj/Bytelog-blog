@@ -131,8 +131,7 @@ const AddBlog = () => {
       data.append("content", form.content);
       // if (form.blog_type) data.append("blog_type", form.blog_type);
       data.append("status", status);
-      console.log("CoverFile:",coverFile)
-      if (coverFile) data.append("coverImageKey", coverFile);
+      if (coverFile) data.append("coverImage", coverFile);
 
       const res = await createBlog(data);
       const created = res?.data?.data;

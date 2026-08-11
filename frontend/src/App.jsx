@@ -11,13 +11,17 @@ import AddBlog from "./pages/AddBlog"
 import Profile from "./pages/Profile.jsx"
 import BlogDetails from "./pages/BlogDetails"
 import BlogsLayout from "./layout/BlogsLayout"
+import ProtectedRoute from "./components/ProtectedRoute.jsx"
 
 const App=()=>{
   const routes = createBrowserRouter(createRoutesFromElements(
     <Route path="/" element={<RootLayout/>}>
       <Route path="/" element={<HomeLayout/>}>
         <Route index element={<Home/>}/>
-        <Route path="/add" element={<AddBlog/>}/>
+        <Route element={<ProtectedRoute/>}>
+          <Route path="/add" element={<AddBlog/>}/>
+          <Route path="/profile" element={<Profile/>}/>
+        </Route>
         <Route path="/about" element={<About/>}/>
         <Route path="/blogs" element={<BlogsLayout />}>
           <Route index element={<Blogs />} />
@@ -25,7 +29,6 @@ const App=()=>{
           <Route path="s/:slug" element={<BlogDetails />} />
         </Route>
 
-        <Route path="/profile" element={<Profile/>}/>
         <Route path="/contact" element={<Contact/>}/>
       </Route>
       <Route path="/login" element={<Login/>}/>

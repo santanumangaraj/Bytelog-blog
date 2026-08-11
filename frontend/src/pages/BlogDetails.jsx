@@ -5,9 +5,12 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import {
   getAllBlogs,
   getBlogBySlug,
-  // getBlogLikeCount,
-  // toggleBlogLike,
+  getBlogLikeCount,
+  getBlogLikeStatus,
+  toggleBlogLike,
+  toggleBlogUnlike,
 } from "../routes/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import { CYAN, PINK, Reveal } from "../components/blog/blogUi.jsx";
 import renderMarkdown from "../components/addBlog/markdown.jsx";
 import ArticleHeader from "../components/blogDetail/ArticleHeader.jsx";
@@ -24,14 +27,15 @@ const looksLikeHtml = (s = "") => /<\/?(p|h[1-6]|ul|ol|li|pre|img|a|strong|em|bl
 const BlogDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [related, setRelated] = useState([]);
-  // const [likeCount, setLikeCount] = useState(0);
-  // const [liked, setLiked] = useState(false);
-  // const [likeBusy, setLikeBusy] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,24 +59,46 @@ const BlogDetails = () => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [load]);
 
-  /* likes — reuse the existing like endpoints */
-  // useEffect(() => {
-  //   let alive = true;
-  //   (async () => {
-  //     try {
-  //       const res = await getBlogLikeCount(id);
-  //       const data = res.data?.data ?? res.data;
-  //       if (!alive) return;
-  //       setLikeCount(data?.count ?? data?.likeCount ?? data?.likes ?? 0);
-  //       setLiked(Boolean(data?.isLiked ?? data?.liked));
-  //     } catch {
-  //       /* likes are non-critical for reading the article */
-  //     }
-  //   })();
-  //   return () => {
-  //     alive = false;
-  //   };
-  // }, [id]);
+  /* like count — public, fetch whenever the loaded blog changes */
+  useEffect(() => {
+    if (!blog?.id) return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await getBlogLikeCount(blog.id);
+        const data = res.data?.data ?? res.data;
+        if (!alive) return;
+        setLikeCount(data?.count ?? 0);
+      } catch {
+        /* likes are non-critical for reading the article */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [blog?.id]);
+
+  /* like status — only meaningful when logged in */
+  useEffect(() => {
+    if (!blog?.id || !authUser) {
+      setLiked(false);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const res = await getBlogLikeStatus(blog.id);
+        const data = res.data?.data ?? res.data;
+        if (!alive) return;
+        setLiked(Boolean(data?.liked));
+      } catch {
+        /* non-critical */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [blog?.id, authUser]);
 
   /* related articles from the existing list endpoint */
   useEffect(() => {
@@ -92,21 +118,31 @@ const BlogDetails = () => {
     };
   }, [slug]);
 
-  // const onToggleLike = async () => {
-  //   setLikeBusy(true);
-  //   const prevLiked = liked;
-  //   const prevCount = likeCount;
-  //   setLiked(!prevLiked);
-  //   setLikeCount(prevCount + (prevLiked ? -1 : 1));
-  //   try {
-  //     await toggleBlogLike(id);
-  //   } catch {
-  //     setLiked(prevLiked);
-  //     setLikeCount(prevCount);
-  //   } finally {
-  //     setLikeBusy(false);
-  //   }
-  // };
+  const onToggleLike = async () => {
+    if (!authUser) {
+      navigate("/login");
+      return;
+    }
+    if (!blog?.id) return;
+
+    setLikeBusy(true);
+    const prevLiked = liked;
+    const prevCount = likeCount;
+    setLiked(!prevLiked);
+    setLikeCount(prevCount + (prevLiked ? -1 : 1));
+    try {
+      if (prevLiked) {
+        await toggleBlogUnlike(blog.id);
+      } else {
+        await toggleBlogLike(blog.id);
+      }
+    } catch {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+    } finally {
+      setLikeBusy(false);
+    }
+  };
 
   const content = blog?.content ?? blog?.blog_content ?? blog?.blogContent ?? "";
   const body = useMemo(() => {
@@ -174,13 +210,13 @@ const BlogDetails = () => {
                   )}
                 </div>
 
-                {/* <ArticleActions
+                <ArticleActions
                   liked={liked}
                   likeCount={likeCount}
                   likeBusy={likeBusy}
                   onToggleLike={onToggleLike}
                   title={blog.title}
-                /> */}
+                />
 
                 <AuthorCard author={blog.authorDetails} />
               </div>

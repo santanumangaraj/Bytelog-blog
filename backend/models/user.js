@@ -58,6 +58,20 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "READER",
+      },
+      failedLoginAttempts: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      lockUntil: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       modelName: "user",

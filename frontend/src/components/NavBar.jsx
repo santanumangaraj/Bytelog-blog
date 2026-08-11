@@ -145,9 +145,9 @@ const NavBar = ()=>{
                 <div className="drawer-side z-40">
                     <label htmlFor="mobile-drawer" className="drawer-overlay"></label>
 
-                    <ul className="menu p-4 gap-1 w-72 min-h-full bg-base-100 text-base-content">
+                    <ul className="menu gap-1 w-80 min-h-full bg-base-100 text-base-content">
 
-                    <li className="text-lg font-bold mb-4">Menu</li>
+                    <li className="text-lg font-bold mb-4 mr-10">Menu</li>
                     {[
                         { to:"/",icon:faHouse,label:"Home"},
                         { to:"/blogs",icon:faNewspaper,label:"Blogs"},
@@ -173,7 +173,7 @@ const NavBar = ()=>{
                                 <div className="flex justify-start items-center gap-3 mx-5">
                                     <div className="avatar">
                                         <div className="ring-primary ring-offset-base-100 h-10 rounded-full ring ring-offset-2">
-                                            <img src={user.avatar}/>
+                                            <img src={user.avatarImageUrl}/>
                                         </div>
                                     </div>
 

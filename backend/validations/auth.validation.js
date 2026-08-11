@@ -6,7 +6,7 @@ const registerSchema = Joi.object({
     email: Joi.string().email({
         minDomainSegments: 2,
     }).required(),
-    password: Joi.string().min(6).max(100).required(),
+    password: Joi.string().min(8).max(100).required(),
 })
 
 const loginSchema = Joi.object({
@@ -15,8 +15,8 @@ const loginSchema = Joi.object({
 })
 
 const changePasswordSchema = Joi.object({
-    oldPassword: Joi.string().min(6).max(100).required(),
-    newPassword: Joi.string().min(6).max(100).required()
+    currentPassword: Joi.string().min(8).max(100).required(),
+    newPassword: Joi.string().min(8).max(100).required()
 })
 
 export {

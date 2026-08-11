@@ -1,7 +1,7 @@
 import { toggleLikeQueue } from "../queues/like.queue.js"
-import { createBlogLike, findBlogLikeByPk, findOneBlogLike } from "../repository/like.repository.js"
+import { findOneBlogLike } from "../repository/like.repository.js"
+import { getLikeCount } from "./redisLike.service.js"
 import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
 
 
 const toggleBlogLike = async(userId ,{blogId})=>{
@@ -56,7 +56,37 @@ const toggleBlogUnlike = async(userId ,{blogId})=>{
 
 }
 
+const getBlogLikeCount = async({blogId})=>{
+
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+
+    const count = await getLikeCount(blogId)
+
+    return {
+        count
+    }
+
+}
+
+const getBlogLikeStatus = async(userId,{blogId})=>{
+
+    if(!blogId || !userId){
+        throw new ApiError(400,"Blog id and userId are required")
+    }
+
+    const existingLike = await findOneBlogLike({blogId,likedBy:userId})
+
+    return {
+        liked: Boolean(existingLike)
+    }
+
+}
+
 export {
     toggleBlogLike,
-    toggleBlogUnlike
+    toggleBlogUnlike,
+    getBlogLikeCount,
+    getBlogLikeStatus
 }

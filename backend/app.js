@@ -2,6 +2,7 @@ import "dotenv/config";
 import path from "path";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import cookieParser from "cookie-parser"
 // import swaggerUi from "swagger-ui-express"
 // import swaggerDocument from "./swagger-output.json" with { type: "json" };
@@ -10,8 +11,25 @@ import db from "./models/index.js";
 
 const app = express()
 
+// Only trust the reverse proxy's headers (X-Forwarded-For, etc.) when actually
+// deployed behind one — needed for correct rate-limiter IPs and secure cookies.
+app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : 0)
+
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+app.use(helmet())
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+        // no Origin header (curl, server-to-server, same-origin) is always allowed
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true)
+        }
+        return callback(new Error("Not allowed by CORS"))
+    },
     credentials: true
 }))
 

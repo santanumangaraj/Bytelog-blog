@@ -1,13 +1,15 @@
 import { Router } from "express"
-import { changePassword, getCurrentUser, login, logoutUser, register } from "../controllers/auth.controller.js"
+import { changePassword, getCurrentUser, login, logout, refreshToken, register } from "../controllers/auth.controller.js"
 import { uploadAvatar } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { doValidate } from "../middlewares/validate.middleware.js";
 import { changePasswordSchema, loginSchema, registerSchema } from "../validations/auth.validation.js";
+import { loginRateLimiter, registerRateLimiter, refreshRateLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = Router()
 
 router.post("/register",
+    registerRateLimiter,
     uploadAvatar.fields([
         {
             name: "avatar",
@@ -18,9 +20,10 @@ router.post("/register",
     register
 )
 
-router.post("/login",doValidate(loginSchema),login)
-router.post("/logout",verifyJWT,logoutUser)
+router.post("/login",loginRateLimiter,doValidate(loginSchema),login)
+router.post("/refresh-token",refreshRateLimiter,refreshToken)
+router.post("/logout",verifyJWT,logout)
 router.post("/change-password",verifyJWT,doValidate(changePasswordSchema),changePassword)
 router.get("/current-user", verifyJWT, getCurrentUser)
 
-export default router
+export default router

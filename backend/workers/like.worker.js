@@ -6,6 +6,15 @@ import { decrementLikeCount, incrementLikeCount } from "../services/redisLike.se
 import { ApiError } from "../utils/ApiError.js";
 import { findBlogByPk } from "../repository/blog.repository.js";
 
+// KNOWN LIMITATIONS (acceptable tradeoff at current scale, not fixed here):
+// 1. concurrency: 20 gives no strict ordering guarantee for rapid like/unlike
+//    toggles from the same user on the same blog — jobs can be picked up out
+//    of order. A real fix needs per-entity serialization (single-concurrency
+//    partition per blogId, or a distributed lock).
+// 2. If a job exhausts all 5 retry attempts, the Redis like counter and the
+//    `like` table can drift with no automatic reconciliation. A periodic job
+//    comparing `redis.get(blog:{id}:likes)` against `countBlogLiked` would
+//    close this gap; not implemented yet.
 const toggleLikeWorker = new Worker("toggle-like-processing",async (job) => {
         console.log(`Processing ${job.name} job`);
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { faRotateRight } from "@fortawesome/free-solid-svg-icons";
 import { getCurrentUser, getMyBlogs } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -77,8 +77,6 @@ const Profile = () => {
   useEffect(() => {
     if (authUser) fetchBlogs();
   }, [authUser, fetchBlogs]);
-
-  if (!authUser) return <Navigate to="/login" replace />;
 
   const openBlog = (blog) => {
     if (blog?.id) navigate(`/blogs/s/${blog.slug}`);

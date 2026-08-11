@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { loginUser } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import PasswordField from "../components/common/PasswordField.jsx";
 
 const Login=()=>{
     const { login } = useAuth();
@@ -14,6 +15,7 @@ const Login=()=>{
     })
 
     const navigate = useNavigate()
+    const location = useLocation()
 
     const handleChange = (e)=>{
         setForm({
@@ -25,14 +27,15 @@ const Login=()=>{
         e.preventDefault();
         setErr("")
         setLoading(true)
-        
+
 
         try{
             const res = await loginUser(form)
             login(res.data)
             setSuccess(true)
+            const destination = location.state?.from || "/"
             setTimeout(()=>{
-                navigate("/")
+                navigate(destination, { replace: true })
                 setSuccess(false)
             },2000)
         }catch(err){
@@ -76,8 +79,13 @@ const Login=()=>{
                 <label htmlFor="identifier" className="font-semibold text-base">Email or Username</label>
                 <input type="text" id="identifier" name="identifier" placeholder="Enter your email or username" onChange={handleChange} className="p-2 border-2 border-cyan-500  rounded-sm outline-none" required/>
 
-                <label htmlFor="password" className="block font-semibold text-base">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" onChange={handleChange} className="p-2 border-2 border-cyan-500 rounded-sm outline-none" required/>
+                <PasswordField
+                    id="password"
+                    label="Password"
+                    autoComplete="current-password"
+                    value={form.password}
+                    onChange={(v) => setForm((prev) => ({ ...prev, password: v }))}
+                />
 
                 <button type="submit" disabled={loading} className="bg-[#f999d3] rounded-sm p-2 mt-6 sm:text-lg hover:bg-[#ee68b8] disabled:opacity-60">{loading?loadingIcon():"Continue"}</button>
             </form>

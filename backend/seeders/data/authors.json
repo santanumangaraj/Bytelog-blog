@@ -1,0 +1,26 @@
+[
+  {
+    "username": "aditisharma",
+    "fullName": "Aditi Sharma",
+    "email": "aditi.sharma@example.com",
+    "avatarImageKey": "seed/avatars/aditi-sharma.jpg",
+    "avatarImageUrl": "https://i.pravatar.cc/300?img=47",
+    "password": "Passw0rd!123"
+  },
+  {
+    "username": "rahulverma",
+    "fullName": "Rahul Verma",
+    "email": "rahul.verma@example.com",
+    "avatarImageKey": "seed/avatars/rahul-verma.jpg",
+    "avatarImageUrl": "https://i.pravatar.cc/300?img=12",
+    "password": "Passw0rd!123"
+  },
+  {
+    "username": "nehakapoor",
+    "fullName": "Neha Kapoor",
+    "email": "neha.kapoor@example.com",
+    "avatarImageKey": "seed/avatars/neha-kapoor.jpg",
+    "avatarImageUrl": "https://i.pravatar.cc/300?img=32",
+    "password": "Passw0rd!123"
+  }
+]

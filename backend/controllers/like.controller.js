@@ -1,4 +1,4 @@
-import { toggleBlogLike, toggleBlogUnlike } from "../services/like.service.js";
+import { toggleBlogLike, toggleBlogUnlike, getBlogLikeCount, getBlogLikeStatus } from "../services/like.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -32,7 +32,31 @@ const toggleUnlike = asyncHandler(async(req,res)=>{
     )
 })
 
+const getLikeCount = asyncHandler(async(req, res)=>{
+
+    const result = await getBlogLikeCount(req.params)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, result, "Like count fetched successfully")
+    )
+})
+
+const getLikeStatus = asyncHandler(async(req, res)=>{
+
+    const result = await getBlogLikeStatus(req.user?.id, req.params)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, result, "Like status fetched successfully")
+    )
+})
+
 export {
     toggleLike,
-    toggleUnlike
+    toggleUnlike,
+    getLikeCount,
+    getLikeStatus
 }

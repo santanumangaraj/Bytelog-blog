@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faEye, faCircleExclamation, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { createBlog } from "../routes/api.js";
@@ -77,10 +77,6 @@ const AddBlog = () => {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty, savedAt]);
-
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: "/add" }} />;
-  }
 
   const handleCoverSelect = (file) => {
     const message = validateCoverFile(file);

@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Understanding Redis Caching in Node.js",
+    "excerpt": "Learn how Redis caching can improve the performance of a Node.js application by reducing unnecessary database queries.",
+    "status": "published",
+    "authorEmail": "aditi.sharma@example.com",
+    "contentFile": "redis-caching-in-nodejs.md",
+    "coverImageUrl": "https://picsum.photos/seed/redis-caching-nodejs/1200/630",
+    "coverImageKey": "seed/covers/redis-caching-nodejs.jpg",
+    "views": 482
+  },
+  {
+    "title": "Designing a Simple Rate Limiter with Redis and Node.js",
+    "excerpt": "A practical guide to building a Redis-backed rate limiter in Node.js to protect your API from abuse and overload.",
+    "status": "published",
+    "authorEmail": "rahul.verma@example.com",
+    "contentFile": "rate-limiter-redis-nodejs.md",
+    "coverImageUrl": "https://picsum.photos/seed/rate-limiter-redis/1200/630",
+    "coverImageKey": "seed/covers/rate-limiter-redis.jpg",
+    "views": 301
+  },
+  {
+    "title": "Building a Reliable Job Queue with BullMQ and Redis",
+    "excerpt": "How to move slow or non-critical work off the request path using BullMQ, a Redis-backed job queue for Node.js.",
+    "status": "published",
+    "authorEmail": "aditi.sharma@example.com",
+    "contentFile": "job-queue-bullmq-redis.md",
+    "coverImageUrl": "https://picsum.photos/seed/bullmq-job-queue/1200/630",
+    "coverImageKey": "seed/covers/bullmq-job-queue.jpg",
+    "views": 256
+  },
+  {
+    "title": "Docker Basics for Node.js Developers",
+    "excerpt": "An introduction to Docker for Node.js developers: images, containers, Dockerfiles, and Docker Compose for local development.",
+    "status": "draft",
+    "authorEmail": "neha.kapoor@example.com",
+    "contentFile": "docker-basics-nodejs.md",
+    "coverImageUrl": "https://picsum.photos/seed/docker-basics-nodejs/1200/630",
+    "coverImageKey": "seed/covers/docker-basics-nodejs.jpg",
+    "views": 0
+  },
+  {
+    "title": "Understanding Database Indexing in MySQL",
+    "excerpt": "Why full table scans are slow, how B-Tree indexes speed up MySQL queries, and how to design composite indexes correctly.",
+    "status": "published",
+    "authorEmail": "rahul.verma@example.com",
+    "contentFile": "mysql-indexing-explained.md",
+    "coverImageUrl": "https://picsum.photos/seed/mysql-indexing/1200/630",
+    "coverImageKey": "seed/covers/mysql-indexing.jpg",
+    "views": 640
+  },
+  {
+    "title": "JWT Authentication Explained: Access Tokens vs Refresh Tokens",
+    "excerpt": "A practical explanation of JWT-based authentication in Node.js, including the difference between access and refresh tokens.",
+    "status": "published",
+    "authorEmail": "neha.kapoor@example.com",
+    "contentFile": "jwt-authentication-explained.md",
+    "coverImageUrl": "https://picsum.photos/seed/jwt-authentication/1200/630",
+    "coverImageKey": "seed/covers/jwt-authentication.jpg",
+    "views": 815
+  }
+]

@@ -1,7 +1,8 @@
-import { changeUserPassword, loginUser, registerUser } from "../services/auth.service.js"
+import { changeUserPassword, loginUser, logoutUser, refreshAccessToken, registerUser } from "../services/auth.service.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { accessTokenCookieOptions, refreshTokenCookieOptions } from "../utils/cookieOptions.js"
 
 
 const register = asyncHandler(async (req, res) => {
@@ -24,19 +25,13 @@ const login = asyncHandler(async(req,res)=>{
     const {loggedInUser,accessToken,refreshToken} = await loginUser(req.body);
 
     if(!loggedInUser){
-        throw new ApiError(500, "Something went wrong while registering the user!!")
+        throw new ApiError(500, "Something went wrong while logging in the user")
     }
-    
-    const options = {
-        httpOnly: true,
-        secure: true,
-        samesite:"none"
-    }
-    
+
     return res
     .status(200)
-    .cookie("accessToken",accessToken,options)
-    // .cookie("refreshToken",refreshToken,options)
+    .cookie("accessToken",accessToken,accessTokenCookieOptions())
+    .cookie("refreshToken",refreshToken,refreshTokenCookieOptions())
     .json(
         new ApiResponse(
             200,
@@ -48,17 +43,29 @@ const login = asyncHandler(async(req,res)=>{
     )
 })
 
-const logoutUser = asyncHandler(async (req ,res)=>{
+const refreshToken = asyncHandler(async (req, res) => {
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
+    const incomingRefreshToken = req.cookies?.refreshToken
+
+    const { accessToken, refreshToken: newRefreshToken } = await refreshAccessToken(incomingRefreshToken)
 
     return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .cookie("accessToken",accessToken,accessTokenCookieOptions())
+    .cookie("refreshToken",newRefreshToken,refreshTokenCookieOptions())
+    .json(
+        new ApiResponse(200,{accessToken},"Access token refreshed")
+    )
+})
+
+const logout = asyncHandler(async (req ,res)=>{
+
+    await logoutUser(req.user.id)
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", accessTokenCookieOptions())
+    .clearCookie("refreshToken", refreshTokenCookieOptions())
     .json(
         new ApiResponse(
             200,
@@ -70,7 +77,7 @@ const logoutUser = asyncHandler(async (req ,res)=>{
 
 const changePassword = asyncHandler(async(req,res)=>{
 
-    const user = await changeUserPassword(req.body,req.user?.id)
+    await changeUserPassword(req.body,req.user?.id)
 
     return res
     .status(200)
@@ -92,7 +99,8 @@ const getCurrentUser = asyncHandler(async (req, res)=>{
 export {
     register,
     login,
-    logoutUser,
+    refreshToken,
+    logout,
     changePassword,
     getCurrentUser
 }

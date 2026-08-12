@@ -12,10 +12,11 @@ import Profile from "./pages/Profile.jsx"
 import BlogDetails from "./pages/BlogDetails"
 import BlogsLayout from "./layout/BlogsLayout"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
+import ErrorBoundary from "./components/ErrorBoundary.jsx"
 
 const App=()=>{
   const routes = createBrowserRouter(createRoutesFromElements(
-    <Route path="/" element={<RootLayout/>}>
+    <Route path="/" element={<RootLayout/>} errorElement={<ErrorBoundary />}>
       <Route path="/" element={<HomeLayout/>}>
         <Route index element={<Home/>}/>
         <Route element={<ProtectedRoute/>}>

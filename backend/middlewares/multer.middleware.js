@@ -23,7 +23,10 @@ const uploadAvatar = multer({
             const fileName = `uploads/userAvatars/${Date.now()}-${file.originalname}`;
             cb(null,fileName);
         }
-    })
+    }),
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5 MB limit
+    }
 });
 
 const blogStorage = multer.diskStorage({

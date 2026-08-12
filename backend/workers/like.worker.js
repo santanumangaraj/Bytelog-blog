@@ -6,6 +6,15 @@ import { decrementLikeCount, incrementLikeCount } from "../services/redisLike.se
 import { ApiError } from "../utils/ApiError.js";
 import { findBlogByPk } from "../repository/blog.repository.js";
 
+process.on("unhandledRejection", (reason) => {
+    console.error("💥 Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("💥 Uncaught Exception:", err);
+    process.exit(1);
+});
+
 // KNOWN LIMITATIONS (acceptable tradeoff at current scale, not fixed here):
 // 1. concurrency: 20 gives no strict ordering guarantee for rapid like/unlike
 //    toggles from the same user on the same blog — jobs can be picked up out
@@ -90,3 +99,12 @@ toggleLikeWorker.on("failed", (job, err) => {
     );
 
 });
+
+const shutdown = async (signal) => {
+    console.log(`${signal} received: closing like worker`);
+    await toggleLikeWorker.close();
+    process.exit(0);
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

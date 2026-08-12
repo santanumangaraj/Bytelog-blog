@@ -10,8 +10,11 @@ const errorHandler = (err, req, res, next) => {
         errors = err.errors ? err.errors.map(e => ({ field: e.path, message: e.message })) : [];
     }
 
-    if (process.env.NODE_ENV === "development" && statusCode === 500) {
-        console.error("💥 Internal Server Error Stack:", err);
+    // Always log 500s — the previous "development"-only guard meant
+    // production errors were sent to the client and then never logged
+    // anywhere at all.
+    if (statusCode === 500) {
+        console.error("💥 Internal Server Error:", err);
     }
 
     return res.status(statusCode).json({

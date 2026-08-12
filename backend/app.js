@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./config/validateEnv.js";
 import path from "path";
 import express from "express";
 import cors from "cors";
@@ -8,6 +9,20 @@ import cookieParser from "cookie-parser"
 // import swaggerDocument from "./swagger-output.json" with { type: "json" };
 import redis from "./config/redis.js";
 import db from "./models/index.js";
+
+// A single unguarded async error outside the Express request lifecycle
+// (e.g. a fire-and-forget call, an event-handler throw) would otherwise
+// crash the whole process with no trace of why.
+process.on("unhandledRejection", (reason) => {
+    console.error("💥 Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("💥 Uncaught Exception:", err);
+    // process state is undefined after this — exit and let the process
+    // manager (Docker/PM2/systemd) restart cleanly rather than limp on.
+    process.exit(1);
+});
 
 const app = express()
 
@@ -51,6 +66,18 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 app.use("/home",(req,res)=>{
     res.send("Welcome")
 })
+
+app.get("/health", async (req, res) => {
+    try {
+        await db.sequelize.authenticate();
+        if (redis.status !== "ready") {
+            throw new Error("redis not ready");
+        }
+        return res.status(200).json({ status: "ok", db: "up", redis: "up" });
+    } catch (error) {
+        return res.status(503).json({ status: "error", message: error.message });
+    }
+})
 app.use("/api/v2/users",userRouter)
 app.use("/api/v2/blogs",blogRouter)
 app.use("/api/v2/likes",likeRouter)
@@ -77,6 +104,8 @@ const waitForRedis = (timeoutMs = 5000) => {
     });
 };
 
+let server;
+
 // Test DB & Redis Connections before starting the server
 const startServer = async () => {
     try {
@@ -91,7 +120,7 @@ const startServer = async () => {
             console.warn(`   Connection URL: ${process.env.REDIS_URL}`);
         }
 
-        app.listen(PORT, () => {
+        server = app.listen(PORT, () => {
             console.log(`⚙ Server is running at port ${PORT}`);
         });
     } catch (error) {
@@ -105,4 +134,34 @@ startServer();
 app.on("error", (error)=>{
     console.log(`Err: ${error}`)
 })
+
+// Stop accepting new connections, let in-flight requests finish, then close
+// the DB/Redis connections before exiting — without this, every restart
+// (deploy, `docker compose restart`, orchestrator reschedule) hard-kills
+// whatever request happened to be in flight.
+const shutdown = async (signal) => {
+    console.log(`${signal} received: starting graceful shutdown`);
+
+    if (server) {
+        await new Promise((resolve) => server.close(resolve));
+    }
+
+    try {
+        await db.sequelize.close();
+    } catch (error) {
+        console.error("Error closing database connection:", error.message);
+    }
+
+    try {
+        await redis.quit();
+    } catch (error) {
+        console.error("Error closing Redis connection:", error.message);
+    }
+
+    console.log("👋 Shutdown complete");
+    process.exit(0);
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 

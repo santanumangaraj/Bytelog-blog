@@ -36,8 +36,24 @@ const refreshRateLimiter = buildLimiter({
     keyPrefix: "rl:refresh:",
 });
 
+const viewRateLimiter = buildLimiter({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: "Too many view updates. Please slow down.",
+    keyPrefix: "rl:view:",
+});
+
+const uploadRateLimiter = buildLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 20,
+    message: "Too many uploads. Please try again later.",
+    keyPrefix: "rl:upload:",
+});
+
 export {
     loginRateLimiter,
     registerRateLimiter,
     refreshRateLimiter,
+    viewRateLimiter,
+    uploadRateLimiter,
 }

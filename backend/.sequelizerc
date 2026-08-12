@@ -1,0 +1,13 @@
+// sequelize-cli always loads this file as CommonJS, regardless of the
+// project's "type": "module" — this just points the CLI at the paths it
+// needs; it never requires config.js itself (config.js is loaded natively
+// by the CLI and can stay ESM). Run CLI commands from backend/ without
+// needing to pass --config every time.
+const path = require("path");
+
+module.exports = {
+    config: path.resolve("config", "config.js"),
+    "models-path": path.resolve("models"),
+    "seeders-path": path.resolve("seeders"),
+    "migrations-path": path.resolve("migrations"),
+};

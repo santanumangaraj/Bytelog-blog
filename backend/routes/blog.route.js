@@ -5,10 +5,11 @@ import { delBlog, fetchedAllBlogs, fetchedBlogBySlug, fetchedOwnerBlogs, getBlog
 import { doValidate } from "../middlewares/validate.middleware.js";
 import { deleteBlogSchema, getAllBlogsSchema, getAllUserBlogsSchema, getBlogByIdSchema, getBlogBySlugSchema, publishSchema, toggleStatusBodySchema, updateBlogBodySchema } from "../validations/blog.validation.js";
 import idempotencyMiddleware from "../middlewares/idempotency.middleware.js";
+import { uploadRateLimiter, viewRateLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = Router()
 
-router.post("/upload-blog", uploadBlogImage.fields([
+router.post("/upload-blog", uploadRateLimiter, uploadBlogImage.fields([
     {
         name: "coverImage",
         maxCount: 1
@@ -29,6 +30,6 @@ router.patch("/:blogId", verifyJWT, doValidate(getBlogByIdSchema, "params"), doV
 
 router.patch("/:blogId/status", verifyJWT, doValidate(getBlogByIdSchema, "params"), doValidate(toggleStatusBodySchema), toggleStatus)
 
-router.patch("/:blogId/view", doValidate(getBlogByIdSchema, "params"), incrementView)
+router.patch("/:blogId/view", viewRateLimiter, doValidate(getBlogByIdSchema, "params"), incrementView)
 
 export default router

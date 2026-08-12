@@ -10,6 +10,15 @@ import { optimizeImage } from "../utils/optimizeImage.utils.js";
 import { cacheKey } from "../cache/cacheKey.js";
 import { releaseLock } from "../cache/redisLock.js";
 
+process.on("unhandledRejection", (reason) => {
+    console.error("💥 Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("💥 Uncaught Exception:", err);
+    process.exit(1);
+});
+
 const blogImageWorker = new Worker("blog-image-processing", async (job) => {
     console.log("Worker received job");
 
@@ -152,5 +161,17 @@ const delBlogImageWorker = new Worker("del-blog-img-processing", async (job) => 
 }).on("failed", (job, err) => {
     console.log(`Job ${job.id} failed:`, err.message);
 });
+
+// Let BullMQ finish/checkpoint whatever job is currently in flight before the
+// process exits — otherwise a mid-upload/mid-S3-write job gets hard-killed
+// on every restart with no chance to release its lock or fail cleanly.
+const shutdown = async (signal) => {
+    console.log(`${signal} received: closing blog workers`);
+    await Promise.all([blogImageWorker.close(), delBlogImageWorker.close()]);
+    process.exit(0);
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 export { blogImageWorker, delBlogImageWorker };

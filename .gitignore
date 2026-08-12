@@ -1,0 +1,19 @@
+# Secrets / local config — never commit real credentials
+backend/config/config.json
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+!**/.env.sample
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+
+# Editor/OS
+.DS_Store
+*.log

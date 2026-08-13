@@ -26,7 +26,7 @@ router.get("/me", verifyJWT, doValidate(getAllUserBlogsSchema, "query"), fetched
 
 router.delete("/delete-blog/:blogId", verifyJWT, doValidate(deleteBlogSchema, "params"), delBlog)
 
-router.patch("/:blogId", verifyJWT, doValidate(getBlogByIdSchema, "params"), uploadBlogImage.fields([
+router.patch("/:blogId", uploadRateLimiter, verifyJWT, doValidate(getBlogByIdSchema, "params"), uploadBlogImage.fields([
     {
         name: "coverImage",
         maxCount: 1

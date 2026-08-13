@@ -63,7 +63,7 @@ const Blogs = () => {
 
     const openBlog = (blog) => {
         // if (blog?.id) navigate(`/blogs/id/${blog.id}`);
-        if (blog?.id) navigate(`/blogs/s/${blog.slug}`);
+        if (blog?.id) navigate(`/blog/${blog.slug}`);
     };
 
     const handleReset = () => {

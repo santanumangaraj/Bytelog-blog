@@ -25,7 +25,7 @@ const CONTROLS = [
   { key: "link", icon: faLink, label: "Link", wrap: ["[", "](https://)"] },
 ];
 
-const BlogContentEditor = ({ value, onChange, error }) => {
+const BlogContentEditor = ({ value= "", onChange, error }) => {
   const ref = useRef(null);
 
   const apply = (control) => {

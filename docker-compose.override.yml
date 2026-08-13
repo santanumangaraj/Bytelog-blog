@@ -1,0 +1,41 @@
+# Auto-merged by `docker compose` whenever this file sits next to
+# docker-compose.yml — no extra -f flag needed. Gives the backend + workers
+# live reload for local dev: source is bind-mounted and nodemon restarts the
+# process on change, instead of needing `--build` after every edit.
+#
+# To run the plain production-shaped stack without this override:
+#   docker compose -f docker-compose.yml up -d --build
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  blog-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev:worker:blog
+
+  like-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev:worker:like

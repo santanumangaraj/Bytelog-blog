@@ -4,13 +4,13 @@ import FieldError from "./FieldError.jsx";
 
 /* NOTE: blog types mirror the options your Blogs listing already filters on.
    Adjust this list if your backend enum differs. */
-export const BLOG_TYPES = [
-  "Technology",
-  "Programming",
-  "Career",
-  "Design",
-  "Personal",
-];
+// export const BLOG_TYPES = [
+//   "Technology",
+//   "Programming",
+//   "Career",
+//   "Design",
+//   "Personal",
+// ];
 
 const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, error }) => (
   <div className="card mt-6 rounded-3xl bg-base-100 p-5 shadow-md sm:p-6">
@@ -22,7 +22,7 @@ const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, erro
     </p>
     <h2 className="font-barlow text-lg font-bold text-base-content">Blog Details</h2>
 
-    <div className="mt-5">
+    {/* <div className="mt-5">
       <label htmlFor="blog-type" className="text-sm font-semibold text-base-content">
         Blog Type
       </label>
@@ -40,7 +40,7 @@ const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, erro
         ))}
       </select>
       <FieldError message={error} />
-    </div>
+    </div> */}
 
     <div className="mt-5">
       <span className="text-sm font-semibold text-base-content">Status</span>
@@ -48,6 +48,7 @@ const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, erro
         {[
           { value: "draft", label: "Draft" },
           { value: "published", label: "Published" },
+          { value: "archived", label: "Archived" },
         ].map((opt) => {
           const active = status === opt.value;
           return (

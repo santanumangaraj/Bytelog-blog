@@ -35,9 +35,6 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
 
         await deleteCache("cache:blogs:*")
         
-        console.log("Status from ui: ", status)
-        console.log("coverImage: ", coverImage[0])
-        
         await blogImageUploadQueue.add("blog-image-process",{
             blogId: blog.id,
             status: status ?? "draft",
@@ -84,7 +81,7 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
             const where = {
                 status: "published",
             };
-        
+            
             if(query){
                 where[Op.or] = [
                     {
@@ -200,7 +197,8 @@ const getBlogBySlug = async({slug})=>{
         ttl:60 * 5,
         loader:async()=>{
 
-            const getBlog = await findOneBlog({slug,status:"published"})
+            // const getBlog = await findOneBlog({slug,status:"published"})
+            const getBlog = await findOneBlog({slug})
 
             if(!getBlog){
                 throw new ApiError(404,"Blog not found!!")
@@ -263,7 +261,7 @@ const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sor
     return AllUsersBlogsdata
 }
 
-const updateABlog = async({blogId},{title,content,excerpt},userId)=>{
+const updateABlog = async({blogId},{title,content,excerpt},userId,files)=>{
 
     if (!blogId) {
         throw new ApiError(400, "Blog id is required")
@@ -288,6 +286,27 @@ const updateABlog = async({blogId},{title,content,excerpt},userId)=>{
         excerpt,
         content
     })
+
+    const coverImage = files?.coverImage
+
+    if (coverImage && Array.isArray(coverImage) && coverImage.length > 0 && coverImage[0].path) {
+        await blogImageUploadQueue.add("blog-image-update-process", {
+            blogId: targetBlog.id,
+            oldCoverImageKey: targetBlog.coverImageKey,
+            tempFilePath: coverImage[0].path,
+            originalFileName: coverImage[0].originalname,
+        },
+        {
+            attempts: 5,
+            jobId: `blog-image-update-${targetBlog.id}`,
+            backoff: {
+                type: "exponential",
+                delay: 5000
+            },
+            removeOnComplete: true,
+            removeOnFail: false
+        })
+    }
 
     await deleteCache("cache:blogs:*")
 

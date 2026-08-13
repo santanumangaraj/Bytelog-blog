@@ -67,6 +67,10 @@ export const getCurrentUser = ()=> API.get("/users/current-user");
 
 //blog route
 export const createBlog = (formData)=> API.post("/blogs/upload-blog", formData);
+export const deleteBlog = (blogId)=> API.delete(`/blogs/delete-blog/${blogId}`);
+export const updateBlog = (blogId,formData)=> API.patch(`/blogs/${blogId}`, formData);
+export const updateBlogStatus = (blogId,status)=> API.patch(`/blogs/${blogId}/status`, status);
+
 export const getAllBlogs = (params)=> API.get("/blogs",{params});
 export const getBlogById = (params)=> API.get(`/blogs/id/${params}`)
 export const getBlogBySlug = (params)=> API.get(`/blogs/s/${params}`)

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faEye, faCircleExclamation, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import {  faCircleExclamation, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { createBlog } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { CYAN, PINK } from "../components/blog/blogUi.jsx";
@@ -12,6 +12,7 @@ import BlogContentEditor from "../components/addBlog/BlogContentEditor.jsx";
 import BlogCoverUpload, { validateCoverFile } from "../components/addBlog/BlogCoverUpload.jsx";
 import BlogSettings from "../components/addBlog/BlogSettings.jsx";
 import BlogPreview from "../components/addBlog/BlogPreview.jsx";
+import BlogForm from "../components/blog/BlogForm.jsx"
 import { getApiErrorMessage, getFieldErrors } from "../components/addBlog/apiError.js";
 
 const INITIAL_FORM = {
@@ -78,6 +79,10 @@ const AddBlog = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty, savedAt]);
 
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: "/add" }} />;
+  }
+
   const handleCoverSelect = (file) => {
     const message = validateCoverFile(file);
     if (message) {
@@ -138,7 +143,7 @@ const AddBlog = () => {
 
       if (forPublish) {
         setSuccess("Your blog has been published.");
-        if (created?.id) navigate(`/blogs/s/${created.slug}`);
+        if (created?.id) navigate(`/blog/${created.slug}`);
         else navigate("/blogs");
         return;
       }
@@ -186,89 +191,22 @@ const AddBlog = () => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center lg:justify-start">
-          <div className="join rounded-full bg-base-100 p-1 shadow-md">
-            {[
-              { key: "edit", label: "Edit", icon: faPen },
-              { key: "preview", label: "Preview", icon: faEye },
-            ].map((tab) => {
-              const active = mode === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setMode(tab.key)}
-                  aria-pressed={active}
-                  className={`btn btn-sm join-item gap-2 rounded-full px-5 font-semibold transition ${
-                    active ? "border-0 text-white" : "btn-ghost text-base-content/70"
-                  }`}
-                  style={
-                    active
-                      ? { backgroundImage: `linear-gradient(135deg, ${CYAN}, ${PINK})` }
-                      : undefined
-                  }
-                >
-                  <FontAwesomeIcon icon={tab.icon} className="text-xs" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {mode === "preview" ? (
-          <div className="mt-8">
-            <BlogPreview
-              title={form.title}
-              excerpt={form.excerpt}
-              content={form.content}
-              coverUrl={coverUrl}
-              author={user?.fullName || user?.username || user?.name}
-              // blogType={form.blog_type}
-              status={form.status}
-            />
-          </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
-            <div className="min-w-0">
-              <BlogTitleInput
-                value={form.title}
-                onChange={(v) => setField("title", v)}
-                error={errors.title}
-              />
-              <BlogExcerpt
-                value={form.excerpt}
-                onChange={(v) => setField("excerpt", v)}
-                error={errors.excerpt}
-              />
-              <BlogContentEditor
-                value={form.content}
-                onChange={(v) => setField("content", v)}
-                error={errors.content}
-              />
-            </div>
-
-            <aside className="min-w-0">
-              <BlogCoverUpload
-                file={coverFile}
-                previewUrl={coverUrl}
-                onSelect={handleCoverSelect}
-                onRemove={() => {
-                  setCoverFile(null);
-                  setSavedAt(null);
-                }}
-                error={errors.coverImage}
-              />
-              {/* <BlogSettings
-                blogType={form.blog_type}
-                status={form.status}
-                onBlogTypeChange={(v) => setField("blog_type", v)}
-                onStatusChange={(v) => setField("status", v)}
-                error={errors.blog_type}
-              /> */}
-            </aside>
-          </div>
-        )}
+        <BlogForm
+          form={form}
+          status={form.status}
+          errors={errors}
+          mode={mode}
+          onModeChange={setMode}
+          onFieldChange={setField}
+          coverFile={coverFile}
+          coverPreviewUrl={coverUrl}
+          onCoverSelect={handleCoverSelect}
+          onCoverRemove={() => {
+            setCoverFile(null);
+            setSavedAt(null);
+          }}
+          author={user?.fullName || user?.username || user?.name}
+        />
       </div>
     </main>
   );

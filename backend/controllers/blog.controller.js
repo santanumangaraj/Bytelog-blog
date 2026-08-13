@@ -112,7 +112,7 @@ const fetchedOwnerBlogs = asyncHandler(async(req,res)=>{
 
 const updateBlog = asyncHandler(async(req,res)=>{
 
-    const updatedBlog = await updateABlog(req.params,req.body,req.user?.id)
+    const updatedBlog = await updateABlog(req.params,req.body,req.user?.id,req.files)
 
     return res.status(200).json(
         new ApiResponse(200, updatedBlog, "Blog details updated successfully")

@@ -22,6 +22,8 @@ const MyBlogsSection = ({
   onOpen,
   onRetry,
   onStartWriting,
+  onEdit,
+  onDelete,
 }) => {
   const [filter, setFilter] = useState("all");
 
@@ -91,10 +93,16 @@ const MyBlogsSection = ({
     return (
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {blogList.map((blog, i) => (
-          <Reveal key={blog?.id ?? i} delay={i * 80}>
-            <BlogCard blog={blog} onOpen={onOpen} />
-          </Reveal>
-        ))}
+            <Reveal key={blog?.id ?? i} delay={i * 80}>
+              <BlogCard
+                blog={blog}
+                onOpen={onOpen}
+                showStatus
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </Reveal>
+          ))}
       </div>
     );
   };

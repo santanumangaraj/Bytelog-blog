@@ -1,14 +1,15 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight,faEllipsisVertical,faPenToSquare,faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { CYAN, PINK, Meta, formatDate } from "./blogUi.jsx";
+import BlogStatusBadge from "../blogManage/BlogStatusBadge.jsx";
 
-const BlogCard = ({ blog, onOpen }) => (
+const BlogCard = ({ blog, onOpen, showStatus = false, onEdit, onDelete }) => (
     <article
-        onClick={() => onOpen(blog)}
+        onClick={() => onOpen?.(blog)}
         className="group card h-full cursor-pointer overflow-hidden rounded-2xl bg-base-100 shadow-md transition duration-300 hover:-translate-y-1.5 hover:shadow-xl"
     >
-        <div className="aspect-[16/10] w-full overflow-hidden">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
             {blog?.coverImageUrl ? (
                 <img
                     src={blog.coverImageUrl}
@@ -23,6 +24,49 @@ const BlogCard = ({ blog, onOpen }) => (
                         backgroundImage: `linear-gradient(135deg, ${CYAN}, ${PINK})`,
                     }}
                 />
+            )}
+            {showStatus && blog?.status && (
+                <BlogStatusBadge status={blog.status} className="absolute top-3 left-3 shadow-md" />
+            )}
+            {(onEdit || onDelete) && (
+                <div
+                className="dropdown dropdown-end absolute top-2 right-2"
+                onClick={(e) => e.stopPropagation()}
+                >
+                <button
+                    type="button"
+                    tabIndex={0}
+                    aria-label="Blog actions"
+                    className="btn btn-circle btn-sm border-0 bg-base-100/90 text-base-content shadow-md"
+                >
+                    <FontAwesomeIcon icon={faEllipsisVertical} />
+                </button>
+                <ul
+                    tabIndex={0}
+                    className="dropdown-content menu z-10 mt-2 w-36 rounded-2xl bg-base-100 p-2 shadow-xl"
+                >
+                    {onEdit && (
+                    <li>
+                        <button type="button" onClick={() => onEdit(blog)} className="rounded-xl">
+                        <FontAwesomeIcon icon={faPenToSquare} className="text-xs" />
+                        Edit
+                        </button>
+                    </li>
+                    )}
+                    {onDelete && (
+                    <li>
+                        <button
+                        type="button"
+                        onClick={() => onDelete(blog)}
+                        className="rounded-xl text-error"
+                        >
+                        <FontAwesomeIcon icon={faTrashCan} className="text-xs" />
+                        Delete
+                        </button>
+                    </li>
+                    )}
+                </ul>
+                </div>
             )}
         </div>
         <div className="flex flex-1 flex-col gap-3 p-5">

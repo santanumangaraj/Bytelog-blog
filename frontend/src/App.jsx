@@ -10,6 +10,7 @@ import Contact from "./pages/Contact"
 import AddBlog from "./pages/AddBlog"
 import Profile from "./pages/Profile.jsx"
 import BlogDetails from "./pages/BlogDetails"
+import EditBlog from "./pages/EditBlog.jsx"
 import BlogsLayout from "./layout/BlogsLayout"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
 import ErrorBoundary from "./components/ErrorBoundary.jsx"
@@ -19,19 +20,23 @@ const App=()=>{
     <Route path="/" element={<RootLayout/>} errorElement={<ErrorBoundary />}>
       <Route path="/" element={<HomeLayout/>}>
         <Route index element={<Home/>}/>
+
         <Route element={<ProtectedRoute/>}>
           <Route path="/add" element={<AddBlog/>}/>
           <Route path="/profile" element={<Profile/>}/>
-        </Route>
-        <Route path="/about" element={<About/>}/>
-        <Route path="/blogs" element={<BlogsLayout />}>
-          <Route index element={<Blogs />} />
-          {/* <Route path="id/:blogId" element={<BlogDetails />} /> */}
-          <Route path="s/:slug" element={<BlogDetails />} />
+          <Route path="blog/:slug/edit" element={<EditBlog />} />
         </Route>
 
+        <Route path="/about" element={<About/>}/>
+
+        <Route path="/blogs" element={<BlogsLayout />}>
+          <Route index element={<Blogs />} />
+        </Route>
+
+        <Route path="blog/:slug" element={<BlogDetails />} />
         <Route path="/contact" element={<Contact/>}/>
       </Route>
+      
       <Route path="/login" element={<Login/>}/>
       <Route path="/register" element={<Register/>}/>
     </Route>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -9,6 +9,7 @@ import {
   getBlogLikeStatus,
   toggleBlogLike,
   toggleBlogUnlike,
+  deleteBlog
 } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { CYAN, PINK, Reveal } from "../components/blog/blogUi.jsx";
@@ -19,6 +20,10 @@ import AuthorCard from "../components/blogDetail/AuthorCard.jsx";
 import RelatedBlogs from "../components/blogDetail/RelatedBlogs.jsx";
 import BlogDetailSkeleton from "../components/blogDetail/BlogDetailSkeleton.jsx";
 import StateCard from "../components/blog/StateCard.jsx";
+import BlogActions from "../components/blogManage/BlogActions.jsx";
+import DeleteBlogModal from "../components/blogManage/DeleteBlogModal.jsx";
+import { isBlogOwner } from "../components/blogManage/blogOwnership.js";
+import { getApiErrorMessage } from "../components/addBlog/apiError.js";
 
 /* The backend may store markdown-subset text (what the Add Blog editor writes)
    or ready-made HTML. Detect once and render accordingly — no format change. */
@@ -27,6 +32,7 @@ const looksLikeHtml = (s = "") => /<\/?(p|h[1-6]|ul|ol|li|pre|img|a|strong|em|bl
 const BlogDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: authUser } = useAuth();
 
   const [blog, setBlog] = useState(null);
@@ -36,6 +42,16 @@ const BlogDetails = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
+  const [confirmDelete,setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [flash,setFlash] = useState(location.state?.flash ?? "")
+
+  useEffect(() => {
+    if (!flash) return undefined;
+    const t = setTimeout(() => setFlash(""), 4000);
+    return () => clearTimeout(t);
+  }, [flash]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +69,7 @@ const BlogDetails = () => {
       setLoading(false);
     }
   }, [slug]);
+
 
   useEffect(() => {
     load();
@@ -144,7 +161,7 @@ const BlogDetails = () => {
     }
   };
 
-  const content = blog?.content ?? blog?.blog_content ?? blog?.blogContent ?? "";
+  const content = blog?.content ?? "";
   const body = useMemo(() => {
     if (!content) return null;
     if (looksLikeHtml(content)) {
@@ -161,12 +178,40 @@ const BlogDetails = () => {
   const openBlog = (b) => {
     console.log("Blog id:",b)
     // if (b?.id) navigate(`/blogs/id/${b.id}`);
-    if (b?.slug) navigate(`/blogs/s/${b.slug}`);
+    if (b?.slug) navigate(`/blog/${b.slug}`);
+  };
+
+  const isOwner = Boolean(authUser) && isBlogOwner(blog, authUser);
+
+  const handleDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteBlog(blog.id);
+      navigate("/profile", { replace: true, state: { flash: "Blog deleted successfully." } });
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        navigate("/login", { replace: true, state: { from: `/blog/${blog.slug}` } });
+        return;
+      }
+      setDeleteError(getApiErrorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-base-200/40">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        {flash && (
+          <div
+            role="status"
+            className="mb-6 rounded-2xl bg-success/10 px-4 py-3 text-sm text-success"
+          >
+            {flash}
+          </div>
+        )}
         {loading ? (
           <BlogDetailSkeleton />
         ) : notFound || !blog ? (
@@ -218,6 +263,14 @@ const BlogDetails = () => {
                   title={blog.title}
                 />
 
+                {isOwner && (
+                  <BlogActions
+                    status={blog.status}
+                    onEdit={() => navigate(`/blog/${blog.slug}/edit`)}
+                    onDelete={() => setConfirmDelete(true)}
+                  />
+                )}
+
                 <AuthorCard author={blog.authorDetails} />
               </div>
             </article>
@@ -235,6 +288,14 @@ const BlogDetails = () => {
                 Back to Blogs
               </button>
             </div>
+            <DeleteBlogModal
+              open={confirmDelete}
+              title={blog.title}
+              deleting={deleting}
+              error={deleteError}
+              onCancel={() => setConfirmDelete(false)}
+              onConfirm={handleDelete}
+            />
           </>
         )}
       </div>

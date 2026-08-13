@@ -2,7 +2,7 @@ import React from "react";
 import { CYAN, PINK, Meta, formatDate } from "../blog/blogUi.jsx";
 import renderMarkdown from "./markdown.jsx";
 
-const BlogPreview = ({ title, excerpt, content, coverUrl, author, blogType, status }) => (
+const BlogPreview = ({ title, excerpt, content="", coverUrl, author, blogType, status }) => (
   <article className="card overflow-hidden rounded-3xl bg-base-100 shadow-md">
     {coverUrl ? (
       <div className="bg-base-200">

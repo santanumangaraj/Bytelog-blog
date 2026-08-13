@@ -15,7 +15,9 @@
     "dev": "nodemon app.js",
     "swagger": "node ./Swagger.js",
     "worker:blog": "node ./workers/blog.worker.js",
-    "worker:like": "node ./workers/like.worker.js"
+    "worker:like": "node ./workers/like.worker.js",
+    "dev:worker:blog": "nodemon workers/blog.worker.js",
+    "dev:worker:like": "nodemon workers/like.worker.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1078.0",

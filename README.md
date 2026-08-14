@@ -22,4 +22,4 @@ docker-compose.yml   Orchestrates the API, both workers, and Redis for local/dev
 
 ## Deployment
 
-See the "Deployment" section in [backend/README.md](backend/README.md) for the production checklist (required env vars, running migrations, starting the workers, and why HTTPS is mandatory) and [frontend/README.md](frontend/README.md) for static-hosting notes.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full step-by-step production hosting process (recommended platforms, provisioning the database and Redis, env vars, running migrations, deploying all 3 backend processes, and a post-launch smoke-test checklist).

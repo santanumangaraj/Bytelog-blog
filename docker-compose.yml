@@ -1,5 +1,31 @@
 services:
 
+  # Connect the app to this as DB_USER=root / DB_PASS=<the same password
+  # below> — a separate non-root MYSQL_USER is deliberately not used here,
+  # since MySQL's image errors if you try to create a user named "root"
+  # alongside MYSQL_ROOT_PASSWORD.
+  mysql:
+    image: mysql:8
+    container_name: bytelog-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASS}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
   redis:
     image: redis:7-alpine
     container_name: bytelog-redis
@@ -43,6 +69,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
 
     command: npm start
 
@@ -67,6 +95,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
 
     command: npm run worker:blog
 
@@ -88,9 +118,40 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
 
     command: npm run worker:like
 
 
+  # Fronts the backend with HTTPS on 80/443 — automatic cert provisioning
+  # and renewal via Let's Encrypt, no manual nginx/certbot setup. Only
+  # meaningful once DOMAIN points at this machine's public IP; harmless to
+  # run locally otherwise (backend stays reachable directly on :8002 too,
+  # this doesn't remove that).
+  caddy:
+    image: caddy:2-alpine
+    container_name: bytelog-caddy
+    restart: unless-stopped
+
+    environment:
+      DOMAIN: ${DOMAIN}
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - backend
+
+
 volumes:
   redis_data:
+  mysql_data:
+  caddy_data:
+  caddy_config:

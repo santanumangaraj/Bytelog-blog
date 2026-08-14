@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "./config/validateEnv.js";
 import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -138,7 +139,10 @@ app.on("error", (error)=>{
 // Stop accepting new connections, let in-flight requests finish, then close
 // the DB/Redis connections before exiting — without this, every restart
 // (deploy, `docker compose restart`, orchestrator reschedule) hard-kills
-// whatever request happened to be in flight.
+// whatever request happened to be in flight. Deliberately does NOT call
+// process.exit itself — the caller (this file when run standalone, or a
+// combined entrypoint importing multiple modules) decides when it's safe
+// to actually end the process, once every module's cleanup has finished.
 const shutdown = async (signal) => {
     console.log(`${signal} received: starting graceful shutdown`);
 
@@ -158,10 +162,25 @@ const shutdown = async (signal) => {
         console.error("Error closing Redis connection:", error.message);
     }
 
-    console.log("👋 Shutdown complete");
-    process.exit(0);
+    console.log("👋 API shutdown complete");
 };
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+// Only self-register signal handlers when this file is run directly
+// (`node app.js`) — when imported by a combined entrypoint instead, that
+// entrypoint owns signal handling so multiple modules' shutdowns don't race
+// to exit the process before each other finishes cleaning up.
+const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMainModule) {
+    process.on("SIGTERM", async () => {
+        await shutdown("SIGTERM");
+        process.exit(0);
+    });
+    process.on("SIGINT", async () => {
+        await shutdown("SIGINT");
+        process.exit(0);
+    });
+}
+
+export { shutdown as shutdownApi };
 

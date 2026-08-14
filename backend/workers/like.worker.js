@@ -1,4 +1,5 @@
 import "dotenv/config"
+import { fileURLToPath } from "url";
 import { Worker } from "bullmq";
 import redis from "../config/redis.js";
 import { findBlogLikeByPk, findOneBlogLike,destoryBlogLike, createBlogLike } from "../repository/like.repository.js";
@@ -100,11 +101,24 @@ toggleLikeWorker.on("failed", (job, err) => {
 
 });
 
+// Deliberately does NOT call process.exit itself — see app.js for why.
 const shutdown = async (signal) => {
     console.log(`${signal} received: closing like worker`);
     await toggleLikeWorker.close();
-    process.exit(0);
+    console.log("👋 Like worker shutdown complete");
 };
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMainModule) {
+    process.on("SIGTERM", async () => {
+        await shutdown("SIGTERM");
+        process.exit(0);
+    });
+    process.on("SIGINT", async () => {
+        await shutdown("SIGINT");
+        process.exit(0);
+    });
+}
+
+export { toggleLikeWorker, shutdown as shutdownLikeWorker };

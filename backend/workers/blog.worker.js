@@ -1,6 +1,7 @@
 import "dotenv/config";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import s3 from "../config/s3.js";
 import redis from "../config/redis.js";
 import { Worker } from "bullmq";
@@ -268,13 +269,24 @@ const delBlogImageWorker = new Worker("del-blog-img-processing", async (job) => 
 // Let BullMQ finish/checkpoint whatever job is currently in flight before the
 // process exits — otherwise a mid-upload/mid-S3-write job gets hard-killed
 // on every restart with no chance to release its lock or fail cleanly.
+// Deliberately does NOT call process.exit itself — see app.js for why.
 const shutdown = async (signal) => {
     console.log(`${signal} received: closing blog workers`);
     await Promise.all([blogImageWorker.close(), delBlogImageWorker.close()]);
-    process.exit(0);
+    console.log("👋 Blog workers shutdown complete");
 };
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 
-export { blogImageWorker, delBlogImageWorker };
+if (isMainModule) {
+    process.on("SIGTERM", async () => {
+        await shutdown("SIGTERM");
+        process.exit(0);
+    });
+    process.on("SIGINT", async () => {
+        await shutdown("SIGINT");
+        process.exit(0);
+    });
+}
+
+export { blogImageWorker, delBlogImageWorker, shutdown as shutdownBlogWorkers };

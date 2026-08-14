@@ -1,0 +1,7 @@
+# Caddy automatically provisions and renews HTTPS certificates (Let's
+# Encrypt) for whatever domain is set here — no manual cert management.
+# {$DOMAIN} is read from the caddy service's environment (docker-compose.yml).
+
+{$DOMAIN} {
+	reverse_proxy backend:8002
+}

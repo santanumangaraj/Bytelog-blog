@@ -13,6 +13,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "start:render": "node render-entry.js",
     "swagger": "node ./Swagger.js",
     "worker:blog": "node ./workers/blog.worker.js",
     "worker:like": "node ./workers/like.worker.js",

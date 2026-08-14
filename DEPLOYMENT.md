@@ -152,10 +152,17 @@ Render wakes the container — that's expected, not a bug.
 1. Vercel → **Add New** → **Project** → select the repo, **Root Directory**: `frontend`.
 2. **Settings** → **Environment Variables**:
    ```
-   VITE_API_URL=https://your-service-name.onrender.com/api/v2
+   VITE_API_URL=/api/v2
    ```
-   Must be set before the build runs — Vite bakes it into the static bundle.
-3. **Deploy**. `vercel.json` handles SPA routing so deep links don't 404.
+   **A relative path, not the full Render URL.** `vercel.json` already
+   rewrites `/api/v2/*` to the Render backend server-side, so the browser
+   only ever talks to your Vercel domain — this is what makes the auth
+   cookies first-party instead of cross-site, avoiding browsers blocking
+   them as third-party cookies (the actual cause if login keeps bouncing
+   back to `/login` right after a successful sign-in). Must be set before
+   the build runs — Vite bakes it into the static bundle — and changing it
+   requires a rebuild, not just a redeploy of an already-built bundle.
+3. **Deploy**. `vercel.json` also handles SPA routing so deep links don't 404.
 4. (Optional) **Settings** → **Domains** → add a custom domain.
 
 ---

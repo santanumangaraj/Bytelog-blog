@@ -6,8 +6,8 @@ import { useTheme } from "../../context/ThemeContext.jsx";
 import { CYAN, PINK } from "./blogUi.jsx";
 
 /* NOTE: adjust these two import paths if your assets live elsewhere. */
-import blogTitleBg from "../../assets/blogTitleBg.jpg";
-import blogTitleLightBg from "../../assets/blogTitleLightBg.jpg";
+import blogTitleBg from "../../assets/blogTitleBG.jpg";
+import blogTitleLightBg from "../../assets/blogTitleLightBG.jpg";
 
 const BlogHero = () => {
     const { theme } = useTheme();

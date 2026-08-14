@@ -44,7 +44,14 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             return callback(null, true)
         }
-        return callback(new Error("Not allowed by CORS"))
+        // Log the exact rejected origin and the current allowlist — without
+        // this, a CORS misconfiguration is a guessing game from the client
+        // side alone (the browser's console never reveals what the server
+        // actually compared against).
+        console.warn(`CORS: rejected origin "${origin}" — not in CORS_ORIGIN allowlist [${allowedOrigins.join(", ") || "empty"}]`)
+        const corsError = new Error("Not allowed by CORS")
+        corsError.statusCode = 403
+        return callback(corsError)
     },
     credentials: true
 }))

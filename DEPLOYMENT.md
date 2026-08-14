@@ -152,18 +152,13 @@ Render wakes the container — that's expected, not a bug.
 1. Vercel → **Add New** → **Project** → select the repo, **Root Directory**: `frontend`.
 2. **Settings** → **Environment Variables**:
    ```
-   VITE_API_URL=/api/v2
+   VITE_API_URL=https://your-service-name.onrender.com/api/v2
    ```
-   **A relative path, not the full Render URL.** `vercel.json` already
-   rewrites `/api/v2/*` to the Render backend server-side, so the browser
-   only ever talks to your Vercel domain — this is what makes the auth
-   cookies first-party instead of cross-site, avoiding browsers blocking
-   them as third-party cookies (the actual cause if login keeps bouncing
-   back to `/login` right after a successful sign-in). Must be set before
-   the build runs — Vite bakes it into the static bundle — and changing it
-   requires a rebuild, not just a redeploy of an already-built bundle.
-3. **Deploy**. `vercel.json` also handles SPA routing so deep links don't 404.
+   Must be set before the build runs — Vite bakes it into the static bundle.
+3. **Deploy**. `vercel.json` handles SPA routing so deep links don't 404.
 4. (Optional) **Settings** → **Domains** → add a custom domain.
+
+**If login keeps bouncing back to `/login` right after a successful sign-in**, see "Cross-site cookies" under **After launch** below — that's a separate, known issue with this direct-cross-domain setup (Vercel ↔ Render), not something wrong with these steps.
 
 ---
 
@@ -190,6 +185,7 @@ changes.
 
 ## After launch
 
+- **Cross-site cookies (login bounces back to `/login`).** Vercel and Render are different domains, so the auth cookie is technically "third-party" from the browser's point of view even with correct `SameSite=None; Secure` (already set in `backend/utils/cookieOptions.js`) — some browsers restrict or block that regardless of the flags being right. First things to check, in order: (1) confirm `NODE_ENV=production` is actually set as an env var on Render — that fix is gated behind it, so if it's missing the fix silently never applied; (2) confirm `CORS_ORIGIN` on Render exactly matches your Vercel URL, no trailing slash; (3) if both check out and it's still happening, it's very likely third-party cookie blocking (Safari's ITP and Chrome's rollout are both increasingly strict about this for genuinely cross-domain setups). The robust fix for that last case is making the API same-origin via a Vercel rewrite (proxy `/api/v2/*` on your Vercel domain to Render, and point `VITE_API_URL` at that relative path instead of the full Render URL) — ask if you want this wired up; it's a real fix but does mean changing `VITE_API_URL`, which was intentionally left alone for now.
 - **Cold starts are the main UX cost of the free tier.** If this becomes annoying, Render's paid Starter plan ($7/mo) keeps the service always-on — worth it once this is more than a portfolio piece.
 - **An external uptime monitor** (e.g. UptimeRobot's free tier) pinging `/health` every few minutes both tells you about real downtime and, as a side effect, tends to keep the free instance awake more often — not a guarantee against Render's sleep policy, but a common practice.
 - **Confirm Aiven's plan status independently** — I can't verify from here whether your instance is on a free trial with an expiry or a sustained free tier; check the Aiven dashboard so the database doesn't disappear on you unexpectedly.

@@ -1,6 +1,6 @@
 import { Model, Op } from "sequelize"
 import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
-import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog, updateBlog } from "../repository/blog.repository.js"
+import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog, incrementBlogViews, updateBlog } from "../repository/blog.repository.js"
 import { findBlogIdsByTagSlug } from "../repository/tags.repository.js"
 import { attachTagsToBlog } from "./tags.service.js"
 import { ApiError } from "../utils/ApiError.js"
@@ -376,6 +376,25 @@ const toggleBlogStatus =async ({blogId},{status},userId)=>{
 
 }
 
+const incrementBlogView = async({blogId})=>{
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+
+    await incrementBlogViews({blogId});
+
+    
+    const blog = await findBlogByPk(blogId)
+    
+    if(!blog){
+        throw new ApiError(404,"Blog not found")
+    }
+    
+    await deleteCache(cacheKey.getBlogBySlug(blog.slug))
+    
+    return {viewCount:blog.views}
+}
+
 export {
     publishBlog,
     getBlogById,
@@ -384,5 +403,6 @@ export {
     deleteABlog,
     getUserBlogs,
     updateABlog,
-    toggleBlogStatus
+    toggleBlogStatus,
+    incrementBlogView
 }

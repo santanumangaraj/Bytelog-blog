@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart as faHeartSolid } from "@fortawesome/free-solid-svg-icons";
+import { faHeart as faHeartSolid, faEye } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import { faLinkedinIn, faXTwitter } from "@fortawesome/free-brands-svg-icons";
 import { faLink, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { PINK } from "../blog/blogUi.jsx";
 
-const ArticleActions = ({ liked, likeCount, likeBusy, onToggleLike, title }) => {
+const ArticleActions = ({ liked, likeCount, likeBusy, onToggleLike, title, viewCount }) => {
   const [copied, setCopied] = useState(false);
   const url = typeof window !== "undefined" ? window.location.href : "";
 
@@ -40,6 +40,16 @@ const ArticleActions = ({ liked, likeCount, likeBusy, onToggleLike, title }) => 
         <span className="font-semibold">{liked ? "Liked" : "Like"}</span>
         <span className="opacity-80">{likeCount ?? 0}</span>
       </button>
+
+      {typeof viewCount === "number" && (
+        <span
+          className="inline-flex items-center gap-2 text-sm text-base-content/60"
+          aria-label={`${viewCount} views`}
+        >
+          <FontAwesomeIcon icon={faEye} className="text-xs" />
+          {viewCount.toLocaleString()} views
+        </span>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="mr-1 text-sm text-base-content/60">Share this article</span>

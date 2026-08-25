@@ -1,5 +1,5 @@
 import blog from "../models/blog.js"
-import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, publishBlog, toggleBlogStatus, updateABlog } from "../services/blog.service.js"
+import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, incrementBlogView, publishBlog, toggleBlogStatus, updateABlog } from "../services/blog.service.js"
 import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -130,7 +130,13 @@ const toggleStatus = asyncHandler(async(req,res)=>{
 })
 
 const incrementView = asyncHandler(async(req,res)=>{
+    const count = await incrementBlogView(req.params);
 
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,count)
+    )
 })
 
 export {

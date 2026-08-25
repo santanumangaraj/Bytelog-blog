@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -9,6 +9,7 @@ import {
   getBlogLikeStatus,
   toggleBlogLike,
   toggleBlogUnlike,
+  incrementBlogView,
   deleteBlog
 } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -42,6 +43,8 @@ const BlogDetails = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
+  const viewedBlogIds = useRef(new Set());
   const [confirmDelete,setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -62,6 +65,7 @@ const BlogDetails = () => {
       const item = data?.rows?.[0] ?? data?.blog ?? data;
       if (!item?.id) throw new Error("not-found");
       setBlog(item);
+      setViewCount(item.views ?? 0);
     } catch {
       setBlog(null);
       setNotFound(true);
@@ -116,6 +120,24 @@ const BlogDetails = () => {
       alive = false;
     };
   }, [blog?.id, authUser]);
+
+  /* record a view once per blog per page load — guarded by a ref (not just
+     the blog?.id dep) so React 18 StrictMode's dev double-invoke of effects
+     can't double-count it */
+  useEffect(() => {
+    if (!blog?.id) return;
+    if (viewedBlogIds.current.has(blog.id)) return;
+    viewedBlogIds.current.add(blog.id);
+
+    incrementBlogView(blog.id)
+      .then((res) => {
+        const count = res.data?.data;
+        if (typeof count === "number") setViewCount(count);
+      })
+      .catch(() => {
+        /* view tracking is non-critical for reading the article */
+      });
+  }, [blog?.id]);
 
   /* related articles from the existing list endpoint */
   useEffect(() => {
@@ -261,6 +283,7 @@ const BlogDetails = () => {
                   likeBusy={likeBusy}
                   onToggleLike={onToggleLike}
                   title={blog.title}
+                  viewCount={viewCount}
                 />
 
                 {isOwner && (

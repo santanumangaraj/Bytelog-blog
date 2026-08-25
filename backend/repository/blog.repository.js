@@ -51,11 +51,18 @@ const findAndCountAllBlogs = async({
             }
     return await Blog.findAndCountAll(query)
 }
+
+const incrementBlogViews = async({blogId})=>{
+    return await Blog.increment("views",{
+        where:{id:blogId}
+    })
+}
 export {
     findOneBlog,
     findBlogByPk,
     updateBlog,
     createBlog,
     findAndCountAllBlogs,
-    deleteBlogs
+    deleteBlogs,
+    incrementBlogViews
 }

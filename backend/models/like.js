@@ -33,10 +33,14 @@ export default (sequelize, DataTypes) => {
   );
 
   like.associate = (models) => {
-    like.belongsToMany(models.blog, {
-      through: "blogLikes",
-      as: "likedBlogs",
-      foreignKey: "LikeId",
+    like.belongsTo(models.blog, {
+      foreignKey: "blogId",
+      as: "blog",
+    });
+
+    like.belongsTo(models.user, {
+      foreignKey: "likedBy",
+      as: "user",
     });
   };
 

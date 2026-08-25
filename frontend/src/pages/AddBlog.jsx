@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {  faCircleExclamation, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import { createBlog } from "../routes/api.js";
+import { createBlog, getAllTags } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { CYAN, PINK } from "../components/blog/blogUi.jsx";
 import AddBlogHeader from "../components/addBlog/AddBlogHeader.jsx";
@@ -28,6 +28,8 @@ const AddBlog = () => {
   const { user } = useAuth();
 
   const [form, setForm] = useState(INITIAL_FORM);
+  const [tags, setTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
   const [coverFile, setCoverFile] = useState(null);
   const [coverUrl, setCoverUrl] = useState("");
   const [errors, setErrors] = useState({});
@@ -43,6 +45,13 @@ const AddBlog = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));
     setSavedAt(null);
+  }, []);
+
+  /* the predefined tag list to pick from — fetched once, best-effort */
+  useEffect(() => {
+    getAllTags()
+      .then((res) => setAvailableTags(res.data?.data ?? []))
+      .catch(() => setAvailableTags([]));
   }, []);
 
   /* object URL lifecycle for the cover preview */
@@ -63,9 +72,10 @@ const AddBlog = () => {
           form.excerpt.trim() ||
           form.content.trim() ||
           // form.blog_type ||
+          tags.length ||
           coverFile,
       ),
-    [form, coverFile],
+    [form, tags, coverFile],
   );
 
   /* unsaved-changes warning (browser-level, no extra state library) */
@@ -136,6 +146,7 @@ const AddBlog = () => {
       data.append("content", form.content);
       // if (form.blog_type) data.append("blog_type", form.blog_type);
       data.append("status", status);
+      if (tags.length) data.append("tags", JSON.stringify(tags));
       if (coverFile) data.append("coverImage", coverFile);
 
       const res = await createBlog(data);
@@ -206,6 +217,12 @@ const AddBlog = () => {
             setSavedAt(null);
           }}
           author={user?.fullName || user?.username || user?.name}
+          tags={tags}
+          onTagsChange={(next) => {
+            setTags(next);
+            setSavedAt(null);
+          }}
+          availableTags={availableTags}
         />
       </div>
     </main>

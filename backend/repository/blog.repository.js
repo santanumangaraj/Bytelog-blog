@@ -3,10 +3,12 @@ import db from "../models/index.js";
 
 const Blog = db.blog;
 
-const findOneBlog = async(data)=>{
-    return await Blog.findOne({
-        where:data
-    })
+const findOneBlog = async(data,include=[])=>{
+    const query = { where:data }
+    if(include.length){
+        query.include = include
+    }
+    return await Blog.findOne(query)
 }
 
 const createBlog = async(data)=>{
@@ -42,6 +44,10 @@ const findAndCountAllBlogs = async({
             }
             if(include.length){
                 query.include = include
+                // With a belongsToMany include (tags), a plain COUNT(*) double-counts
+                // any blog that has more than one tag — distinct + the PK dedupes it.
+                query.distinct = true
+                query.col = "id"
             }
     return await Blog.findAndCountAll(query)
 }

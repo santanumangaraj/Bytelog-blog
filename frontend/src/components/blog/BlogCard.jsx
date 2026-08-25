@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight,faEllipsisVertical,faPenToSquare,faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { CYAN, PINK, Meta, formatDate } from "./blogUi.jsx";
@@ -76,6 +77,21 @@ const BlogCard = ({ blog, onOpen, showStatus = false, onEdit, onDelete }) => (
             <p className="line-clamp-2 text-sm text-base-content/65">
                 {blog?.excerpt}
             </p>
+            {blog?.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                    {blog.tags.map((t) => (
+                        <Link
+                            key={t.slug}
+                            to={`/blogs?tag=${t.slug}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="badge badge-outline badge-sm rounded-full text-[11px] font-medium hover:border-current"
+                            style={{ color: PINK, borderColor: `${PINK}55` }}
+                        >
+                            #{t.name}
+                        </Link>
+                    ))}
+                </div>
+            )}
             <Meta
                 author={blog?.authorDetails?.fullName}
                 date={formatDate(blog?.createdAt)}

@@ -1,6 +1,7 @@
 import React from "react";
 import { PINK } from "../blog/blogUi.jsx";
 import FieldError from "./FieldError.jsx";
+import TagsInput from "./TagsInput.jsx";
 
 /* NOTE: blog types mirror the options your Blogs listing already filters on.
    Adjust this list if your backend enum differs. */
@@ -12,7 +13,17 @@ import FieldError from "./FieldError.jsx";
 //   "Personal",
 // ];
 
-const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, error }) => (
+const BlogSettings = ({
+  blogType,
+  status,
+  onBlogTypeChange,
+  onStatusChange,
+  error,
+  tags,
+  onTagsChange,
+  tagsError,
+  availableTags,
+}) => (
   <div className="card mt-6 rounded-3xl bg-base-100 p-5 shadow-md sm:p-6">
     <p
       className="mb-1 text-xs font-semibold tracking-[0.2em] uppercase"
@@ -71,6 +82,13 @@ const BlogSettings = ({ blogType, status, onBlogTypeChange, onStatusChange, erro
         Drafts stay private until you publish them.
       </p>
     </div>
+
+    <TagsInput
+      value={tags}
+      onChange={onTagsChange}
+      error={tagsError}
+      availableTags={availableTags}
+    />
   </div>
 );
 

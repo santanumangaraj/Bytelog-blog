@@ -6,6 +6,7 @@ import { doValidate } from "../middlewares/validate.middleware.js";
 import { deleteBlogSchema, getAllBlogsSchema, getAllUserBlogsSchema, getBlogByIdSchema, getBlogBySlugSchema, publishSchema, toggleStatusBodySchema, updateBlogBodySchema } from "../validations/blog.validation.js";
 import idempotencyMiddleware from "../middlewares/idempotency.middleware.js";
 import { uploadRateLimiter, viewRateLimiter } from "../middlewares/rateLimit.middleware.js";
+import { parseJsonField } from "../middlewares/parseJsonField.middleware.js";
 
 const router = Router()
 
@@ -14,7 +15,7 @@ router.post("/upload-blog", uploadRateLimiter, uploadBlogImage.fields([
         name: "coverImage",
         maxCount: 1
     }
-]), verifyJWT, doValidate(publishSchema), idempotencyMiddleware, publish)
+]), verifyJWT, parseJsonField("tags"), doValidate(publishSchema), idempotencyMiddleware, publish)
     
 router.get("/id/:blogId", doValidate(getBlogByIdSchema, "params"), getBlog)
 
@@ -31,7 +32,7 @@ router.patch("/:blogId", uploadRateLimiter, verifyJWT, doValidate(getBlogByIdSch
         name: "coverImage",
         maxCount: 1
     }
-]), doValidate(updateBlogBodySchema), updateBlog)
+]), parseJsonField("tags"), doValidate(updateBlogBodySchema), updateBlog)
 
 router.patch("/:blogId/status", verifyJWT, doValidate(getBlogByIdSchema, "params"), doValidate(toggleStatusBodySchema), toggleStatus)
 

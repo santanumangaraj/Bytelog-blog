@@ -78,6 +78,13 @@ export default (sequelize, DataTypes) => {
       foreignKey: "author",
       as: "authorDetails",
     });
+
+    blog.belongsToMany(models.tags, {
+      through: "blogTags",
+      as: "tags",
+      foreignKey: "blogId",
+      otherKey: "tagId",
+    });
   };
 
   return blog;

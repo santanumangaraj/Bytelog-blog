@@ -15,6 +15,11 @@ const publishSchema = Joi.object({
     status: Joi.string()
         .valid("draft", "published", "archived")
         .default("draft"),
+
+    tags: Joi.array()
+        .items(Joi.string().trim().min(2).max(30))
+        .max(5)
+        .optional(),
 })
 
 const getBlogByIdSchema = Joi.object({
@@ -31,7 +36,11 @@ const updateBlogBodySchema = Joi.object({
     title: Joi.string().trim().min(5).max(200).optional(),
     content: Joi.string().trim().min(50).optional(),
     excerpt: Joi.string().trim().min(10).max(300).optional(),
-}).or("title", "content", "excerpt");
+    tags: Joi.array()
+        .items(Joi.string().trim().min(2).max(30))
+        .max(5)
+        .optional(),
+}).or("title", "content", "excerpt", "tags");
 
 const toggleStatusBodySchema = Joi.object({
     status: Joi.string().valid("draft", "published", "archived").required()
@@ -55,6 +64,12 @@ const getAllUserBlogsSchema = Joi.object({
 
     query: Joi.string()
         .trim()
+        .allow("")
+        .optional(),
+
+    tag: Joi.string()
+        .trim()
+        .lowercase()
         .allow("")
         .optional(),
 
@@ -90,6 +105,12 @@ const getAllBlogsSchema = Joi.object({
 
     query: Joi.string()
         .trim()
+        .allow("")
+        .optional(),
+
+    tag: Joi.string()
+        .trim()
+        .lowercase()
         .allow("")
         .optional(),
 

@@ -2,7 +2,7 @@ import React from "react";
 import { CYAN, PINK, Meta, formatDate } from "../blog/blogUi.jsx";
 import renderMarkdown from "./markdown.jsx";
 
-const BlogPreview = ({ title, excerpt, content="", coverUrl, author, blogType, status }) => (
+const BlogPreview = ({ title, excerpt, content="", coverUrl, author, blogType, status, tags = [] }) => (
   <article className="card overflow-hidden rounded-3xl bg-base-100 shadow-md">
     {coverUrl ? (
       <div className="bg-base-200">
@@ -52,6 +52,19 @@ const BlogPreview = ({ title, excerpt, content="", coverUrl, author, blogType, s
         author={author || "You"}
         date={formatDate(new Date())}
       />
+
+      {tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="badge badge-outline rounded-full text-xs font-medium"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-6 h-px w-full bg-base-300" />
 

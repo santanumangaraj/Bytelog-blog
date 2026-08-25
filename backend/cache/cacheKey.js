@@ -4,5 +4,6 @@ export const cacheKey = {
     idempotency: (key) => `idempotency:${key}`,
     getAllBlogs: (filters)=> `cache:blogs:${JSON.stringify(filters)}`,
     blogImageLock: (blogId)=> `lock:blog-image:${blogId}`,
-    getBlogBySlug: (slugId) => `cache:blogs:slug:${slugId}`
+    getBlogBySlug: (slugId) => `cache:blogs:slug:${slugId}`,
+    getAllTags: () => "cache:tags:all"
 }

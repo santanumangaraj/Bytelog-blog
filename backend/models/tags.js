@@ -29,7 +29,12 @@ export default (sequelize, DataTypes) => {
   );
 
   tags.associate = (models) => {
-    // define association here
+    tags.belongsToMany(models.blog, {
+      through: "blogTags",
+      as: "blogs",
+      foreignKey: "tagId",
+      otherKey: "blogId",
+    });
   };
 
   return tags;

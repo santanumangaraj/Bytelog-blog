@@ -78,6 +78,9 @@ export const getMyBlogs = (query)=> API.get(`/blogs/me`,{params:query})
 
 
 
+//tags route
+export const getAllTags = () => API.get("/tags");
+
 //likes route
 export const getBlogLikeCount = (blogId) => API.get(`/likes/${blogId}/count`);
 export const getBlogLikeStatus = (blogId) => API.get(`/likes/${blogId}/status`);

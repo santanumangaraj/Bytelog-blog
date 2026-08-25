@@ -23,6 +23,9 @@ const BlogForm = ({
   onCoverSelect,
   onCoverRemove,
   author,
+  tags = [],
+  onTagsChange,
+  availableTags,
 }) => (
   <>
     <div className="mt-6 flex justify-center lg:justify-start">
@@ -65,6 +68,9 @@ const BlogForm = ({
           author={author}
           // blogType={form.blog_type}
           status={status}
+          tags={tags.map(
+            (slug) => availableTags?.find((t) => t.slug === slug)?.name ?? slug,
+          )}
         />
       </div>
     ) : (
@@ -101,6 +107,10 @@ const BlogForm = ({
             // onBlogTypeChange={(v) => onFieldChange("blog_type", v)}
             onStatusChange={(v) => onFieldChange("status", v)}
             // error={errors.blog_type}
+            tags={tags}
+            onTagsChange={onTagsChange}
+            tagsError={errors.tags}
+            availableTags={availableTags}
           />
         </aside>
       </div>

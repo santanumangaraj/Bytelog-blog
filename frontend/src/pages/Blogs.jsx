@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getAllBlogs } from "../routes/api.js";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getAllBlogs, getAllTags } from "../routes/api.js";
 import { Reveal, SectionHeading } from "../components/blog/blogUi.jsx";
 import BlogHero from "../components/blog/BlogHero.jsx";
 import BlogFilters from "../components/blog/BlogFilters.jsx";
@@ -17,18 +17,46 @@ const INITIAL_FORM = {
     page: 1,
     limit: 10,
     query: "",
+    tag: "",
     sortBy: "createdAt",
     sortType: "desc",
 };
 
 const Blogs = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [form, setForm] = useState(INITIAL_FORM);
+    const [form, setForm] = useState(() => ({
+        ...INITIAL_FORM,
+        tag: searchParams.get("tag") || "",
+    }));
     const [queryInput, setQueryInput] = useState("");
     const [blogs, setBlogs] = useState({ rows: [], pagination: {} });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [availableTags, setAvailableTags] = useState([]);
+
+    /* tag list for the filter dropdown — fetched once, best-effort (a failed
+       fetch just leaves the dropdown showing "All tags" only) */
+    useEffect(() => {
+        getAllTags()
+            .then((res) => setAvailableTags(res.data?.data ?? []))
+            .catch(() => setAvailableTags([]));
+    }, []);
+
+    /* keep the URL's ?tag= in sync so a filtered view is shareable/bookmarkable */
+    useEffect(() => {
+        setSearchParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                if (form.tag) next.set("tag", form.tag);
+                else next.delete("tag");
+                return next;
+            },
+            { replace: true },
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.tag]);
 
     /* debounce the search box into form.query (resets to page 1) */
     useEffect(() => {
@@ -92,12 +120,17 @@ const Blogs = () => {
                         query={queryInput}
                         sortBy={form.sortBy}
                         sortType={form.sortType}
+                        tag={form.tag}
+                        availableTags={availableTags}
                         onQueryChange={setQueryInput}
                         onSortByChange={(sortBy) =>
                             setForm((p) => ({ ...p, sortBy, page: 1 }))
                         }
                         onSortTypeChange={(sortType) =>
                             setForm((p) => ({ ...p, sortType, page: 1 }))
+                        }
+                        onTagChange={(tag) =>
+                            setForm((p) => ({ ...p, tag, page: 1 }))
                         }
                         onReset={handleReset}
                     />

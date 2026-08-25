@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleExclamation, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import { getBlogBySlug, updateBlog, deleteBlog, updateBlogStatus } from "../routes/api.js";
+import { getBlogBySlug, updateBlog, deleteBlog, updateBlogStatus, getAllTags } from "../routes/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import BlogForm from "../components/blog/BlogForm.jsx";
 import StateCard from "../components/blog/StateCard.jsx";
@@ -30,6 +30,9 @@ const EditBlog = () => {
     content: "",
   });
   const [initial, setInitial] = useState(null);
+  const [tags, setTags] = useState([]);
+  const [initialTags, setInitialTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
 
   /* Status is tracked separately from the content fields on purpose — it's
      saved through a different endpoint (PATCH /:blogId/status) than
@@ -66,12 +69,15 @@ const EditBlog = () => {
         content: item.content ?? item.blogContent ?? "",
       };
       const itemStatus = isValidStatus(item.status) ? item.status : "draft";
+      const itemTags = Array.isArray(item.tags) ? item.tags.map((t) => t.slug) : [];
 
       setBlog(item);
       setForm(next);
       setInitial(next);
       setStatus(itemStatus);
       setInitialStatus(itemStatus);
+      setTags(itemTags);
+      setInitialTags(itemTags);
     } catch (err) {
       const status = err?.response?.status;
       setBlog(null);
@@ -86,6 +92,13 @@ const EditBlog = () => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [load]);
 
+  /* the predefined tag list to pick from — fetched once, best-effort */
+  useEffect(() => {
+    getAllTags()
+      .then((res) => setAvailableTags(res.data?.data ?? []))
+      .catch(() => setAvailableTags([]));
+  }, []);
+
   /* object URL lifecycle for a newly picked cover */
   useEffect(() => {
     if (!coverFile) {
@@ -97,13 +110,19 @@ const EditBlog = () => {
     return () => URL.revokeObjectURL(url);
   }, [coverFile]);
 
-  /* Whether title/excerpt/content/cover changed — drives whether the
+  const tagsDirty = useMemo(() => {
+    if (tags.length !== initialTags.length) return true;
+    return tags.some((t, i) => t !== initialTags[i]);
+  }, [tags, initialTags]);
+
+  /* Whether title/excerpt/content/cover/tags changed — drives whether the
      content-update endpoint (PATCH /:blogId) needs to be called. */
   const contentDirty = useMemo(() => {
     if (!initial) return false;
     if (coverFile) return true;
+    if (tagsDirty) return true;
     return Object.keys(initial).some((k) => initial[k] !== form[k]);
-  }, [initial, form, coverFile]);
+  }, [initial, form, coverFile, tagsDirty]);
 
   /* Whether status changed — drives whether the status endpoint
      (PATCH /:blogId/status) needs to be called. */
@@ -189,6 +208,7 @@ const EditBlog = () => {
         data.append("title", form.title.trim());
         data.append("excerpt", form.excerpt.trim());
         data.append("content", form.content);
+        if (tagsDirty) data.append("tags", JSON.stringify(tags));
         /* cover image is optional on edit — omitting it keeps the existing one */
         if (coverFile) data.append("coverImage", coverFile);
         await updateBlog(blog?.id, data);
@@ -200,6 +220,7 @@ const EditBlog = () => {
 
       setInitial({ ...form });
       setInitialStatus(status);
+      setInitialTags(tags);
       setCoverFile(null);
       setSuccess("Blog updated successfully.");
       setRedirecting(true);
@@ -317,6 +338,9 @@ const EditBlog = () => {
               onCoverSelect={handleCoverSelect}
               onCoverRemove={() => setCoverFile(null)}
               author={user?.fullName || user?.username}
+              tags={tags}
+              onTagsChange={setTags}
+              availableTags={availableTags}
             />
 
             <div className="mt-10 flex flex-col gap-3 rounded-3xl bg-base-100 p-5 shadow-md sm:flex-row sm:items-center sm:justify-between">

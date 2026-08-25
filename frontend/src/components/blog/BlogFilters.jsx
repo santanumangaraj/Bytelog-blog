@@ -2,7 +2,18 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faRotateRight } from "@fortawesome/free-solid-svg-icons";
 
-const BlogFilters = ({ query, sortBy, sortType, onQueryChange, onSortByChange, onSortTypeChange, onReset }) => (
+const BlogFilters = ({
+    query,
+    sortBy,
+    sortType,
+    tag,
+    availableTags = [],
+    onQueryChange,
+    onSortByChange,
+    onSortTypeChange,
+    onTagChange,
+    onReset,
+}) => (
     <div className="card rounded-3xl bg-base-100 p-4 shadow-md sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <label className="relative min-w-0 flex-1">
@@ -21,6 +32,22 @@ const BlogFilters = ({ query, sortBy, sortType, onQueryChange, onSortByChange, o
             </label>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:items-center">
+                {onTagChange && (
+                    <select
+                        value={tag || ""}
+                        onChange={(e) => onTagChange(e.target.value)}
+                        className="select select-bordered rounded-full"
+                        aria-label="Filter by tag"
+                    >
+                        <option value="">All tags</option>
+                        {availableTags.map((t) => (
+                            <option key={t.slug} value={t.slug}>
+                                {t.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
+
                 <select
                     value={sortBy}
                     onChange={(e) => onSortByChange(e.target.value)}

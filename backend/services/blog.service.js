@@ -1,6 +1,8 @@
 import { Model, Op } from "sequelize"
 import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
 import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog, updateBlog } from "../repository/blog.repository.js"
+import { findBlogIdsByTagSlug } from "../repository/tags.repository.js"
+import { attachTagsToBlog } from "./tags.service.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { generateExcerpt } from "../utils/excerpt.utils.js"
@@ -10,9 +12,26 @@ import { acquireLock } from "../cache/redisLock.js"
 import { cacheAside } from "../cache/cacheAside.js"
 import {  cacheKey } from "../cache/cacheKey.js"
 
+const TAG_ATTRIBUTES = ["id", "name", "slug"]
+const tagsInclude = () => ({
+    association: "tags",
+    attributes: TAG_ATTRIBUTES,
+    through: { attributes: [] },
+})
+
+// `tag` filter narrows by slug — resolved to concrete blog IDs up front
+// (rather than a required belongsToMany include) so it doesn't distort
+// findAndCountAll's LIMIT/COUNT when a blog carries more than one tag.
+const applyTagFilter = async (where, tag) => {
+    if (!tag) return where
+
+    const blogIds = await findBlogIdsByTagSlug(tag)
+    return { ...where, id: { [Op.in]: blogIds.length ? blogIds : [-1] } }
+}
 
 
-const publishBlog = async(userId,{title,content,status},{coverImage})=>{
+
+const publishBlog = async(userId,{title,content,status,tags},{coverImage})=>{
 
         if(!title || !content){
             throw new ApiError(400,"All fields are required")
@@ -24,7 +43,7 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
 
         const slug = await createUniqueSlug(title);
         const excerpt =await  generateExcerpt(content);
-        
+
         const blog = await createBlog({
             title,
             content,
@@ -32,6 +51,10 @@ const publishBlog = async(userId,{title,content,status},{coverImage})=>{
             excerpt,
             author:userId
         })
+
+        if(tags?.length){
+            await attachTagsToBlog(blog, tags)
+        }
 
         await deleteCache("cache:blogs:*")
         
@@ -66,22 +89,24 @@ const getBlogById = async ({blogId})=>{
     return blog;
 }
 
-const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="desc"})=>{
+const getAllBlogs =async ({page=1,limit=10, query,tag,sortBy="createdAt",sortType="desc"})=>{
 
     const pageNum = Number(page)
     const limitNum = Number(limit)
     const offset = (pageNum-1) * limitNum;
 
-    const filters = {page,limit, query,sortBy,sortType}
+    const filters = {page,limit, query,tag,sortBy,sortType}
 
     return await cacheAside({
         key: cacheKey.getAllBlogs(filters),
         ttl: 60,
         loader: async ()=>{
-            const where = {
+            let where = {
                 status: "published",
             };
-            
+
+            where = await applyTagFilter(where, tag)
+
             if(query){
                 where[Op.or] = [
                     {
@@ -117,9 +142,9 @@ const getAllBlogs =async ({page=1,limit=10, query,sortBy="createdAt",sortType="d
             const include = [{
                 association:"authorDetails",
                 attributes: ["id","username","fullName","email","avatarImageUrl"]
-            }]
+            }, tagsInclude()]
 
-        
+
             const {rows,count } = await findAndCountAllBlogs({
                 where,
                 include,
@@ -198,7 +223,7 @@ const getBlogBySlug = async({slug})=>{
         loader:async()=>{
 
             // const getBlog = await findOneBlog({slug,status:"published"})
-            const getBlog = await findOneBlog({slug})
+            const getBlog = await findOneBlog({slug}, [tagsInclude()])
 
             if(!getBlog){
                 throw new ApiError(404,"Blog not found!!")
@@ -209,7 +234,7 @@ const getBlogBySlug = async({slug})=>{
     })
 }
 
-const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sortType="desc"})=>{
+const getUserBlogs = async(userId,{page=1,limit=10, query,tag,sortBy="createdAt",sortType="desc"})=>{
 
     if(!userId){
         throw new ApiError(400,"userid is required")
@@ -219,19 +244,21 @@ const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sor
     const limitNum = Number(limit)
     const offset = (pageNum-1) * limitNum;
 
-    const where ={}
+    let where ={}
 
     if(query){
         where.title={
             [Op.like]:`%${query}%`
-        } 
+        }
     }
 
     where.author = userId
-        
+
+    where = await applyTagFilter(where, tag)
+
     const allowedSortFields = ["createdAt", "title","views","publishedAt"];
     const order = [];
-        
+
     if (allowedSortFields.includes(sortBy)) {
         order.push([
             sortBy,
@@ -244,6 +271,7 @@ const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sor
 
     const {rows,count } = await findAndCountAllBlogs({
         where,
+        include: [tagsInclude()],
         order,
         offset,
         limit: limitNum,
@@ -261,13 +289,13 @@ const getUserBlogs = async(userId,{page=1,limit=10, query,sortBy="createdAt",sor
     return AllUsersBlogsdata
 }
 
-const updateABlog = async({blogId},{title,content,excerpt},userId,files)=>{
+const updateABlog = async({blogId},{title,content,excerpt,tags},userId,files)=>{
 
     if (!blogId) {
         throw new ApiError(400, "Blog id is required")
     }
 
-    if (!title && !excerpt && !content) {
+    if (!title && !excerpt && !content && tags === undefined) {
         throw new ApiError(400, "At least one field is required")
     }
 
@@ -286,6 +314,10 @@ const updateABlog = async({blogId},{title,content,excerpt},userId,files)=>{
         excerpt,
         content
     })
+
+    if(tags !== undefined){
+        await attachTagsToBlog(targetBlog, tags)
+    }
 
     const coverImage = files?.coverImage
 

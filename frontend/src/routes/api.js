@@ -27,7 +27,9 @@ API.interceptors.response.use(
         const isAuthEndpoint =
             originalRequest?.url?.includes("/users/login") ||
             originalRequest?.url?.includes("/users/register") ||
-            originalRequest?.url?.includes("/users/refresh-token");
+            originalRequest?.url?.includes("/users/refresh-token") ||
+            originalRequest?.url?.includes("/users/forgot-password") ||
+            originalRequest?.url?.includes("/users/reset-password");
 
         if (status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
             originalRequest._retry = true;
@@ -64,6 +66,8 @@ export const logoutUser = ()=> API.post("/users/logout");
 export const refreshToken = ()=> API.post("/users/refresh-token");
 export const changePassword = (data)=> API.post("/users/change-password",data);
 export const getCurrentUser = ()=> API.get("/users/current-user");
+export const forgotPassword = (data)=> API.post("/users/forgot-password",data);
+export const resetPassword = (data)=> API.post("/users/reset-password",data);
 
 //blog route
 export const createBlog = (formData)=> API.post("/blogs/upload-blog", formData);

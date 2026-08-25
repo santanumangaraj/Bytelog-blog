@@ -38,6 +38,13 @@ const findByPkWithAllFields = async(userId)=>{
     return await User.findByPk(userId)
 }
 
+const findByResetToken = async(hashedToken)=>{
+
+    return await User.findOne({
+        where:{ passwordResetToken: hashedToken }
+    })
+}
+
 const updateUser = async(user,data)=>{
     return await user.update(data)
 }
@@ -47,6 +54,7 @@ export {
     findByIdentifier,
     findByPkWithAllFields,
     findByEmailOrUsername,
+    findByResetToken,
     findUserByPk,
     updateUser
 }

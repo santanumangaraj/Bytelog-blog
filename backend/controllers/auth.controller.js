@@ -1,4 +1,4 @@
-import { changeUserPassword, loginUser, logoutUser, refreshAccessToken, registerUser } from "../services/auth.service.js"
+import { changeUserPassword, loginUser, logoutUser, refreshAccessToken, registerUser, requestPasswordReset, resetUserPassword } from "../services/auth.service.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -94,7 +94,28 @@ const getCurrentUser = asyncHandler(async (req, res)=>{
     )
 })
 
+const forgotPassword = asyncHandler(async(req,res)=>{
 
+    await requestPasswordReset(req.body)
+
+    // Same response whether or not the account exists (see auth.service.js)
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{},"If an account with that email exists, a reset link has been sent")
+    )
+})
+
+const resetPassword = asyncHandler(async(req,res)=>{
+
+    await resetUserPassword(req.body)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{},"Password reset successfully")
+    )
+})
 
 export {
     register,
@@ -102,5 +123,7 @@ export {
     refreshToken,
     logout,
     changePassword,
-    getCurrentUser
+    getCurrentUser,
+    forgotPassword,
+    resetPassword
 }

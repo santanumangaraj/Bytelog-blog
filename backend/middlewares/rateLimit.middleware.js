@@ -42,6 +42,13 @@ const registerRateLimiter = buildLimiter({
     keyPrefix: "rl:register:",
 });
 
+const forgotPasswordRateLimiter = buildLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    message: "Too many password reset requests. Please try again later.",
+    keyPrefix: "rl:forgot-password:",
+});
+
 const refreshRateLimiter = buildLimiter({
     windowMs: 15 * 60 * 1000,
     max: 30,
@@ -69,4 +76,5 @@ export {
     refreshRateLimiter,
     viewRateLimiter,
     uploadRateLimiter,
+    forgotPasswordRateLimiter,
 }

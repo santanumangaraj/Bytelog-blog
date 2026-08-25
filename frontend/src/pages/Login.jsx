@@ -86,6 +86,9 @@ const Login=()=>{
                     value={form.password}
                     onChange={(v) => setForm((prev) => ({ ...prev, password: v }))}
                 />
+                <p className="text-sm text-right -mt-1">
+                    <a onClick={()=>navigate("/forgot-password")} className="text-cyan-500 cursor-pointer hover:underline">Forgot password?</a>
+                </p>
 
                 <button type="submit" disabled={loading} className="bg-[#f999d3] rounded-sm p-2 mt-6 sm:text-lg hover:bg-[#ee68b8] disabled:opacity-60">{loading?loadingIcon():"Continue"}</button>
             </form>

@@ -1,11 +1,14 @@
 import { ApiError } from "../utils/ApiError.js"
 import bcrypt from "bcrypt"
+import crypto from "crypto"
 import jwt from "jsonwebtoken"
-import { createUser, findByEmailOrUsername, findByIdentifier, findByPkWithAllFields, findUserByPk, updateUser } from "../repository/auth.repository.js";
+import { createUser, findByEmailOrUsername, findByIdentifier, findByPkWithAllFields, findByResetToken, findUserByPk, updateUser } from "../repository/auth.repository.js";
 import generateAccessAndRefreshTokens from "../utils/generateAccessAndRefreshTokens.js"
+import { sendPasswordResetEmail } from "../utils/mailer.utils.js"
 
 const MAX_FAILED_ATTEMPTS = Number(process.env.LOGIN_MAX_FAILED_ATTEMPTS) || 5;
 const LOCK_DURATION_MS = Number(process.env.LOGIN_LOCK_DURATION_MS) || 15 * 60 * 1000;
+const PASSWORD_RESET_EXPIRY_MS = Number(process.env.PASSWORD_RESET_EXPIRY_MS) || 30 * 60 * 1000;
 
 const registerUser = async (data) => {
 
@@ -147,10 +150,64 @@ const changeUserPassword = async({currentPassword, newPassword},userId)=>{
     return user;
 }
 
+const requestPasswordReset = async({email})=>{
+
+    if(!email){
+        throw new ApiError(400,"Email is required")
+    }
+
+    const user = await findByIdentifier(email)
+
+    // Same response whether or not the account exists — otherwise this
+    // endpoint becomes a way to check which emails are registered.
+    if(!user){
+        return
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex")
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex")
+
+    await updateUser(user,{
+        passwordResetToken: hashedToken,
+        passwordResetExpires: new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS),
+    })
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`
+
+    await sendPasswordResetEmail(user.email, resetUrl)
+}
+
+const resetUserPassword = async({token,newPassword})=>{
+
+    if(!token || !newPassword){
+        throw new ApiError(400,"Token and new password are required")
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
+
+    const user = await findByResetToken(hashedToken)
+
+    if(!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()){
+        throw new ApiError(400,"Password reset link is invalid or has expired")
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword,10)
+
+    await updateUser(user,{
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        // a leaked/stale session shouldn't survive a password reset
+        refreshToken: null,
+    })
+}
+
 export {
     registerUser,
     loginUser,
     refreshAccessToken,
     logoutUser,
-    changeUserPassword
+    changeUserPassword,
+    requestPasswordReset,
+    resetUserPassword
 }

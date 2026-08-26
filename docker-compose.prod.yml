@@ -1,0 +1,99 @@
+# Production compose file for the "EC2 + Docker Compose, keep Aiven/Upstash"
+# path documented in DEPLOYMENT.md's AWS appendix.
+#
+# Deliberately does NOT include the `mysql`/`redis` services from
+# docker-compose.yml — this path uses the existing Aiven MySQL and Upstash
+# Redis (same as backend/.env already points at), so running local
+# mysql/redis containers here would be dead weight. Just as importantly: the
+# dev compose file's backend/blog-worker/like-worker all have
+# `depends_on: mysql: condition: service_healthy` — without a real local
+# mysql actually running, those services would simply never start. Dropping
+# the dependency here avoids that trap entirely.
+#
+# Run with:
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: bytelog-backend
+    restart: unless-stopped
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      IS_DOCKER: "true"
+
+    # No host port published — Caddy reaches this over the internal compose
+    # network at backend:8002, so the backend is never directly reachable
+    # from outside the instance. Only Caddy's 80/443 need to be public.
+    expose:
+      - "8002"
+
+    volumes:
+      - ./backend/public/temp:/app/public/temp
+
+
+  blog-worker:
+    build:
+      context: ./backend
+
+    container_name: bytelog-blog-worker
+    restart: unless-stopped
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      IS_DOCKER: "true"
+
+    volumes:
+      - ./backend/public/temp:/app/public/temp
+
+    command: npm run worker:blog
+
+
+  like-worker:
+    build:
+      context: ./backend
+
+    container_name: bytelog-like-worker
+    restart: unless-stopped
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      IS_DOCKER: "true"
+
+    command: npm run worker:like
+
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: bytelog-caddy
+    restart: unless-stopped
+
+    environment:
+      DOMAIN: ${DOMAIN}
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - backend
+
+
+volumes:
+  caddy_data:
+  caddy_config:

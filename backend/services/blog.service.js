@@ -1,7 +1,7 @@
 import { Model, Op } from "sequelize"
 import { blogImageUploadQueue, delBlogImgQueue } from "../queues/blog.queue.js"
-import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findOneBlog, incrementBlogViews, updateBlog } from "../repository/blog.repository.js"
-import { findBlogIdsByTagSlug } from "../repository/tags.repository.js"
+import { createBlog, deleteBlogs, findAndCountAllBlogs, findBlogByPk, findBlogsByIds, findOneBlog, incrementBlogViews, updateBlog } from "../repository/blog.repository.js"
+import { findBlogIdsByTagSlug, findRelatedBlogIds } from "../repository/tags.repository.js"
 import { attachTagsToBlog } from "./tags.service.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -234,6 +234,56 @@ const getBlogBySlug = async({slug})=>{
     })
 }
 
+const RELATED_BLOGS_LIMIT = 3
+
+const getRelatedBlogs = async({blogId})=>{
+    if(!blogId){
+        throw new ApiError(400,"Blog id is required")
+    }
+
+    return await cacheAside({
+        key: cacheKey.getRelatedBlogs(blogId),
+        ttl: 60 * 5,
+        loader: async()=>{
+
+            const blog = await findOneBlog({id:blogId}, [tagsInclude()])
+
+            if(!blog){
+                throw new ApiError(404,"Blog not found")
+            }
+
+            const tagIds = blog.tags?.map((t)=>t.id) ?? []
+
+            if(!tagIds.length){
+                return []
+            }
+
+            const relatedBlogIds = await findRelatedBlogIds({
+                blogId,
+                tagIds,
+                limit: RELATED_BLOGS_LIMIT,
+            })
+
+            if(!relatedBlogIds.length){
+                return []
+            }
+
+            const relatedBlogs = await findBlogsByIds({
+                ids: relatedBlogIds,
+                include: [{
+                    association:"authorDetails",
+                    attributes: ["id","username","fullName","email","avatarImageUrl"]
+                }, tagsInclude()],
+            })
+
+            // findBlogsByIds' IN-clause doesn't preserve order — re-sort by the
+            // shared-tag-count ranking findRelatedBlogIds already computed.
+            const rankById = new Map(relatedBlogIds.map((id,i)=>[id,i]))
+            return relatedBlogs.sort((a,b)=>rankById.get(a.id) - rankById.get(b.id))
+        }
+    })
+}
+
 const getUserBlogs = async(userId,{page=1,limit=10, query,tag,sortBy="createdAt",sortType="desc"})=>{
 
     if(!userId){
@@ -404,5 +454,6 @@ export {
     getUserBlogs,
     updateABlog,
     toggleBlogStatus,
-    incrementBlogView
+    incrementBlogView,
+    getRelatedBlogs
 }

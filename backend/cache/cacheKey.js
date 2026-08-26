@@ -5,5 +5,6 @@ export const cacheKey = {
     getAllBlogs: (filters)=> `cache:blogs:${JSON.stringify(filters)}`,
     blogImageLock: (blogId)=> `lock:blog-image:${blogId}`,
     getBlogBySlug: (slugId) => `cache:blogs:slug:${slugId}`,
-    getAllTags: () => "cache:tags:all"
+    getAllTags: () => "cache:tags:all",
+    getRelatedBlogs: (blogId) => `cache:blogs:related:${blogId}`
 }

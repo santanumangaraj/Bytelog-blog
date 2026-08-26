@@ -1,5 +1,5 @@
 import blog from "../models/blog.js"
-import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getUserBlogs, incrementBlogView, publishBlog, toggleBlogStatus, updateABlog } from "../services/blog.service.js"
+import { deleteABlog, getAllBlogs, getBlogById, getBlogBySlug, getRelatedBlogs, getUserBlogs, incrementBlogView, publishBlog, toggleBlogStatus, updateABlog } from "../services/blog.service.js"
 import { completeRequest, deleteRequest } from "../services/idempotency.service.js"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -139,6 +139,19 @@ const incrementView = asyncHandler(async(req,res)=>{
     )
 })
 
+const fetchedRelatedBlogs = asyncHandler(async(req,res)=>{
+
+    const relatedBlogs = await getRelatedBlogs(req.params)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,relatedBlogs,
+            !relatedBlogs?.length? "No related blogs found":"Related blogs fetched successfully"
+        )
+    )
+})
+
 export {
     publish,
     getBlog,
@@ -148,5 +161,6 @@ export {
     fetchedOwnerBlogs,
     updateBlog,
     toggleStatus,
-    incrementView
+    incrementView,
+    fetchedRelatedBlogs
 }

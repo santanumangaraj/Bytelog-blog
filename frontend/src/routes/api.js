@@ -79,6 +79,7 @@ export const getAllBlogs = (params)=> API.get("/blogs",{params});
 export const getBlogById = (params)=> API.get(`/blogs/id/${params}`)
 export const getBlogBySlug = (params)=> API.get(`/blogs/s/${params}`)
 export const getMyBlogs = (query)=> API.get(`/blogs/me`,{params:query})
+export const getRelatedBlogs = (blogId)=> API.get(`/blogs/${blogId}/related`)
 
 
 

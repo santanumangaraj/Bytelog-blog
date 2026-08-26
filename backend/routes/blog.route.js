@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { uploadBlogImage } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
-import { delBlog, fetchedAllBlogs, fetchedBlogBySlug, fetchedOwnerBlogs, getBlog, incrementView, publish, toggleStatus, updateBlog } from "../controllers/blog.controller.js";
+import { delBlog, fetchedAllBlogs, fetchedBlogBySlug, fetchedOwnerBlogs, fetchedRelatedBlogs, getBlog, incrementView, publish, toggleStatus, updateBlog } from "../controllers/blog.controller.js";
 import { doValidate } from "../middlewares/validate.middleware.js";
 import { deleteBlogSchema, getAllBlogsSchema, getAllUserBlogsSchema, getBlogByIdSchema, getBlogBySlugSchema, publishSchema, toggleStatusBodySchema, updateBlogBodySchema } from "../validations/blog.validation.js";
 import idempotencyMiddleware from "../middlewares/idempotency.middleware.js";
@@ -37,5 +37,7 @@ router.patch("/:blogId", uploadRateLimiter, verifyJWT, doValidate(getBlogByIdSch
 router.patch("/:blogId/status", verifyJWT, doValidate(getBlogByIdSchema, "params"), doValidate(toggleStatusBodySchema), toggleStatus)
 
 router.patch("/:blogId/view", viewRateLimiter, doValidate(getBlogByIdSchema, "params"), incrementView)
+
+router.get("/:blogId/related", doValidate(getBlogByIdSchema, "params"), fetchedRelatedBlogs)
 
 export default router

@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import {
-  getAllBlogs,
+  getRelatedBlogs,
   getBlogBySlug,
   getBlogLikeCount,
   getBlogLikeStatus,
@@ -139,15 +139,19 @@ const BlogDetails = () => {
       });
   }, [blog?.id]);
 
-  /* related articles from the existing list endpoint */
+  /* related articles — blogs sharing at least one tag, ranked by overlap
+     (backend/services/blog.service.js#getRelatedBlogs). Empty when the blog
+     has no tags or nothing else shares one — RelatedBlogs renders nothing
+     rather than falling back to unrelated posts. */
   useEffect(() => {
+    if (!blog?.id) return undefined;
     let alive = true;
     (async () => {
       try {
-        const res = await getAllBlogs({ page: 1, limit: 4, sortBy: "createdAt", sortType: "desc" });
-        const rows = res.data?.data?.rows ?? [];
+        const res = await getRelatedBlogs(blog.id);
+        const rows = res.data?.data ?? [];
         if (!alive) return;
-        setRelated(rows.filter((b) => String(b?.slug) !== String(slug)).slice(0, 3));
+        setRelated(rows);
       } catch {
         setRelated([]);
       }
@@ -155,7 +159,7 @@ const BlogDetails = () => {
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [blog?.id]);
 
   const onToggleLike = async () => {
     if (!authUser) {

@@ -14,7 +14,12 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
 
     ports:
-      - "3306:3306"
+      # Host 3306 is already taken by a native Windows MySQL service — mapped
+      # to 3307 on the host side to avoid the port conflict. Only matters if
+      # you connect to this container directly from the host (e.g. a GUI
+      # client); containers on this compose network still reach it at
+      # mysql:3306 internally, unaffected by this host-side remap.
+      - "3307:3306"
 
     volumes:
       - mysql_data:/var/lib/mysql

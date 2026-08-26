@@ -57,6 +57,17 @@ const incrementBlogViews = async({blogId})=>{
         where:{id:blogId}
     })
 }
+
+const findBlogsByIds = async({ids,include=[]})=>{
+    if(!ids.length) return []
+
+    const query = { where: { id: ids } }
+    if(include.length){
+        query.include = include
+    }
+    return await Blog.findAll(query)
+}
+
 export {
     findOneBlog,
     findBlogByPk,
@@ -64,5 +75,6 @@ export {
     createBlog,
     findAndCountAllBlogs,
     deleteBlogs,
-    incrementBlogViews
+    incrementBlogViews,
+    findBlogsByIds
 }

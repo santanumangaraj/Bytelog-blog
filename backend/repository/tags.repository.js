@@ -34,6 +34,34 @@ const findTagsBySlugs = async (slugs) => {
     })
 }
 
+// Ranks other published blogs by how many tags they share with `tagIds`,
+// most-shared first. Raw SQL over the plain join table (rather than a
+// Sequelize include + GROUP BY across blogs/authorDetails columns) keeps
+// this out of MySQL's ONLY_FULL_GROUP_BY territory — grouping stays
+// confined to blogId, nothing else needs to be functionally dependent on it.
+const findRelatedBlogIds = async ({ blogId, tagIds, limit = 3 }) => {
+    if (!tagIds.length) return []
+
+    const rows = await db.sequelize.query(
+        `SELECT bt.blogId AS blogId, COUNT(*) AS sharedCount
+         FROM \`blogTags\` bt
+         INNER JOIN \`blogs\` b ON b.id = bt.blogId
+         WHERE bt.tagId IN (:tagIds)
+           AND bt.blogId != :blogId
+           AND b.status = 'published'
+           AND b.deletedAt IS NULL
+         GROUP BY bt.blogId
+         ORDER BY sharedCount DESC
+         LIMIT :limit`,
+        {
+            replacements: { tagIds, blogId, limit },
+            type: db.Sequelize.QueryTypes.SELECT,
+        }
+    )
+
+    return rows.map((r) => r.blogId)
+}
+
 const findBlogIdsByTagSlug = async (slug) => {
     const tag = await Tags.findOne({
         where: { slug },
@@ -54,5 +82,6 @@ export {
     createTag,
     findAllTags,
     findTagsBySlugs,
-    findBlogIdsByTagSlug
+    findBlogIdsByTagSlug,
+    findRelatedBlogIds
 }

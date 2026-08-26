@@ -25,8 +25,14 @@ services:
     env_file:
       - ./backend/.env
 
+    # IS_DOCKER is NOT set to true here, unlike docker-compose.yml — that
+    # flag makes backend/config/redis.js use REDIS_URL_DOCKER, which is
+    # meant to point at a *local* `redis` compose service (redis://redis:6379).
+    # This file has no local redis service — it uses Upstash — so leaving
+    # IS_DOCKER unset (or explicitly "false") makes it use the real
+    # REDIS_URL from backend/.env instead.
     environment:
-      IS_DOCKER: "true"
+      IS_DOCKER: "false"
 
     # No host port published — Caddy reaches this over the internal compose
     # network at backend:8002, so the backend is never directly reachable
@@ -49,7 +55,7 @@ services:
       - ./backend/.env
 
     environment:
-      IS_DOCKER: "true"
+      IS_DOCKER: "false"
 
     volumes:
       - ./backend/public/temp:/app/public/temp
@@ -68,7 +74,7 @@ services:
       - ./backend/.env
 
     environment:
-      IS_DOCKER: "true"
+      IS_DOCKER: "false"
 
     command: npm run worker:like
 

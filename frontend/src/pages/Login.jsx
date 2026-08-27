@@ -9,6 +9,7 @@ const Login=()=>{
     const [err,setErr] = useState("")
     const [loading,setLoading] = useState(false)
     const [success,setSuccess] = useState(false)
+    const [redirectLabel,setRedirectLabel] = useState("Home page")
     const [form,setForm] = useState({
         identifier:"",
         password:""
@@ -31,9 +32,15 @@ const Login=()=>{
 
         try{
             const res = await loginUser(form)
-            login(res.data)
+            const loggedInUser = login(res.data)
             setSuccess(true)
-            const destination = location.state?.from || "/"
+            // Respect an explicit redirect (e.g. bounced here from a protected
+            // route) over the role-based default — an admin who was sent here
+            // from /add should land back on /add, not get diverted to /admin.
+            const destination =
+                location.state?.from ||
+                (loggedInUser?.role === "ADMIN" ? "/admin/dashboard" : "/")
+            setRedirectLabel(destination === "/admin/dashboard" ? "the Admin Panel" : destination === "/" ? "Home page" : destination)
             setTimeout(()=>{
                 navigate(destination, { replace: true })
                 setSuccess(false)
@@ -73,7 +80,7 @@ const Login=()=>{
                         <span>Succssfully Login!!</span>
                     </div>
                     <div className="alert alert-success">
-                        <span>Redirecting to Home page...</span>
+                        <span>Redirecting to {redirectLabel}...</span>
                     </div>
                 </div>}
                 <label htmlFor="identifier" className="font-semibold text-base">Email or Username</label>

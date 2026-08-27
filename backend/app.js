@@ -70,6 +70,7 @@ import userRouter from "./routes/auth.route.js"
 import blogRouter from "./routes/blog.route.js"
 import likeRouter from "./routes/like.route.js"
 import tagRouter from "./routes/tags.route.js"
+import adminRouter from "./routes/admin.route.js"
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 app.use("/home",(req,res)=>{
@@ -91,6 +92,7 @@ app.use("/api/v2/users",userRouter)
 app.use("/api/v2/blogs",blogRouter)
 app.use("/api/v2/likes",likeRouter)
 app.use("/api/v2/tags",tagRouter)
+app.use("/api/v2/admin",adminRouter)
 // app.use("/api-docs",swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 

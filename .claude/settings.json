@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8002/api/v2/admin/blogs)",
+      "Bash(netstat -ano)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

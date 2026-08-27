@@ -73,7 +73,10 @@ const fetchedAllBlogs = asyncHandler(async(req,res)=>{
 
 const delBlog = asyncHandler(async (req,res)=>{
     
-    const deletedBlog = await deleteABlog(req.params,req.user?.id)
+    const deletedBlog = await deleteABlog(req.params,{
+        id:req.user?.id,
+        role: req.user.role
+    })
 
     return res
     .status(200)

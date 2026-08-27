@@ -170,7 +170,7 @@ const getAllBlogs =async ({page=1,limit=10, query,tag,sortBy="createdAt",sortTyp
 
 }
 
-const deleteABlog = async ({blogId},userId)=>{
+const deleteABlog = async ({blogId},requester)=>{
 
     if(!blogId){
         throw new ApiError(400,"Blog id is required")
@@ -182,7 +182,7 @@ const deleteABlog = async ({blogId},userId)=>{
         throw new ApiError(404,"Blog not found!!")
     }
 
-    if(getBlog.author !== userId){
+    if(getBlog.author !== requester.id && requester.role === "ADMIN"){
         throw new ApiError(401,"Unauthorized to delete this blog")
     }
 
